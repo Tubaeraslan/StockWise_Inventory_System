@@ -17,6 +17,9 @@ The primary goal is to reduce errors, delays, and visibility problems caused by 
 - **Can Tasar — QA & Documentation**
   - UML models, test planning and execution, bug tracking, final documentation, and repository organization
 
+### Jira board
+- SCRUM board: [https://zehraberr.atlassian.net/jira/software/projects/SCRUM/boards/1]
+
 ### 14-week project plan (summary)
 1. **Initiation (Weeks 1-2):** Project definition, role allocation, Jira setup
 2. **Analysis (Weeks 3-4):** Requirements analysis, UML drafts
