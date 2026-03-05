@@ -151,6 +151,7 @@ Purpose of the main documents in this repository:
 - `Clearance_level_system.pdf`: role hierarchy and clearance model
 - `StockWise_InstallationDeployment.pdf`: installation, execution, deployment, and troubleshooting
 - `architecture.png`, `auth_flow.png`, `rbac.png`, `project-diagram.drawio.png`: visual architecture and flow artifacts
+- `F6EB5E3F-DC1A-4629-9361-BD9055B12140.png`: end-to-end UI snapshot (login, product/category management, dashboard, and alert flow)
 
 ## 9) Diagrams
 
@@ -165,5 +166,10 @@ Purpose of the main documents in this repository:
 
 ### Project diagram
 ![Project Diagram](project-diagram.drawio.png)
+
+### End-to-end UI snapshot
+`F6EB5E3F-DC1A-4629-9361-BD9055B12140.png` presents a single, stitched overview of core StockWise screens: the login page, product and category management table, stock monitoring dashboard (with search/filter controls), and the critical stock alert panel. This visual helps explain how authentication, daily operations, analytics, and alert handling are connected in one user journey.
+
+![StockWise UI Snapshot](F6EB5E3F-DC1A-4629-9361-BD9055B12140.png)
 
 
