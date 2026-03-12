@@ -147,9 +147,15 @@ Purpose of the main documents in this repository:
 - `StockWise_TechnicalRequirements.pdf`: FR/NFR, technology, API, and testing requirements
 - `Technology_stack.pdf`: architectural foundation and backend/data access decisions
 - `Security_architecture.pdf`: defense layers and security controls
+- `CODE SECURITY AND DATA PRIVACY.pdf`: secure coding, data privacy principles, and protection responsibilities
 - `Role_and_authorization_management.pdf`: RBAC and authorization policies
 - `Clearance_level_system.pdf`: role hierarchy and clearance model
 - `StockWise_InstallationDeployment.pdf`: installation, execution, deployment, and troubleshooting
+- `Implementation Roadmap.pdf`: implementation timeline and milestone-based delivery roadmap
+- `Risk Assessment and Management.pdf`: identified risks, impact/probability evaluation, and management approach
+- `Risk Matrix.pdf`: risk prioritization matrix based on likelihood and impact scoring
+- `Mitigation.pdf`: mitigation strategies and preventive/corrective action plan for key risks
+- `Payroll.pdf`: payroll-related process/role documentation linked to operational workflow
 - `architecture.png`, `auth_flow.png`, `rbac.png`, `project-diagram.drawio.png`: visual architecture and flow artifacts
 - `F6EB5E3F-DC1A-4629-9361-BD9055B12140.png`: end-to-end UI snapshot (login, product/category management, dashboard, and alert flow)
 
