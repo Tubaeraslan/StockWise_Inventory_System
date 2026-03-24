@@ -378,7 +378,7 @@ Purpose of the main documents in this repository:
 ## 10) MVP User Interface Screenshots
 
 ### Dashboard Overview - Main Statistics Page
-![Dashboard Overview](./Ekran%20Resmi%202026-03-24%2021.18.43.png)
+![Dashboard Overview](./screenshot-01-dashboard.png)
 
 **Features shown:**
 - Professional gradient navbar with StockWise branding
@@ -387,7 +387,7 @@ Purpose of the main documents in this repository:
 - Quick tips and navigation guidance
 
 ### Category Management - Add & Browse Categories
-![Category Management](./Ekran%20Resmi%202026-03-24%2021.18.59.png)
+![Category Management](./screenshot-02-categories.png)
 
 **Features shown:**
 - Add new category form with name and description
@@ -396,7 +396,7 @@ Purpose of the main documents in this repository:
 - Professional styling with hover effects
 
 ### Product Management - Full CRUD Interface
-![Product Management](./Ekran%20Resmi%202026-03-24%2021.19.07.png)
+![Product Management](./screenshot-03-products.png)
 
 **Features shown:**
 - Comprehensive product form (name, category, quantity, threshold, price)
@@ -405,7 +405,7 @@ Purpose of the main documents in this repository:
 - Category dropdown selection for product association
 
 ### Active Alerts - Low Stock Monitoring
-![Active Alerts](./Ekran%20Resmi%202026-03-24%2021.19.12.png)
+![Active Alerts](./screenshot-04-alerts.png)
 
 **Features shown:**
 - Real-time low-stock alert cards with warning icons
