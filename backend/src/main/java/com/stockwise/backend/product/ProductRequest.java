@@ -12,6 +12,7 @@ public record ProductRequest(
     @NotNull @Min(0) Integer quantity,
     @NotNull @Min(0) Integer threshold,
     @NotNull @DecimalMin("0.0") BigDecimal price,
-    @NotNull Long categoryId
+    @NotNull Long categoryId,
+    Long managerId
 ) {
 }

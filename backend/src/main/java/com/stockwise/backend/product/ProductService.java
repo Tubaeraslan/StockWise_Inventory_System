@@ -3,6 +3,8 @@ package com.stockwise.backend.product;
 import com.stockwise.backend.category.Category;
 import com.stockwise.backend.category.CategoryService;
 import com.stockwise.backend.common.ResourceNotFoundException;
+import com.stockwise.backend.user.StockUser;
+import com.stockwise.backend.user.UserService;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,10 +14,12 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryService categoryService;
+    private final UserService userService;
 
-    public ProductService(ProductRepository productRepository, CategoryService categoryService) {
+    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService) {
         this.productRepository = productRepository;
         this.categoryService = categoryService;
+        this.userService = userService;
     }
 
     @Transactional(readOnly = true)
@@ -59,11 +63,13 @@ public class ProductService {
 
     private void applyRequest(Product product, ProductRequest request) {
         Category category = categoryService.getEntity(request.categoryId());
+        StockUser manager = request.managerId() == null ? null : userService.getEntity(request.managerId());
         product.setName(request.name().trim());
         product.setQuantity(request.quantity());
         product.setThreshold(request.threshold());
         product.setPrice(request.price());
         product.setCategory(category);
+        product.setManager(manager);
     }
 
     private ProductResponse toResponse(Product product) {
@@ -76,6 +82,8 @@ public class ProductService {
             product.getPrice(),
             product.getCategory().getId(),
             product.getCategory().getName(),
+            product.getManager() == null ? null : product.getManager().getId(),
+            product.getManager() == null ? null : product.getManager().getUsername(),
             lowStock
         );
     }

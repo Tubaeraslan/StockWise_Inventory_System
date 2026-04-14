@@ -10,6 +10,8 @@ public record ProductResponse(
     BigDecimal price,
     Long categoryId,
     String categoryName,
+    Long managerId,
+    String managerUsername,
     boolean lowStock
 ) {
 }

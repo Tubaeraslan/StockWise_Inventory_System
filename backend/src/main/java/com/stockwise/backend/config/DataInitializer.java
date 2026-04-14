@@ -4,20 +4,46 @@ import com.stockwise.backend.category.Category;
 import com.stockwise.backend.category.CategoryRepository;
 import com.stockwise.backend.product.Product;
 import com.stockwise.backend.product.ProductRepository;
+import com.stockwise.backend.user.StockUser;
+import com.stockwise.backend.user.UserRepository;
+import com.stockwise.backend.user.UserRole;
 import java.math.BigDecimal;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
 public class DataInitializer {
 
     @Bean
-    CommandLineRunner seedData(CategoryRepository categoryRepository, ProductRepository productRepository) {
+    CommandLineRunner seedData(
+        CategoryRepository categoryRepository,
+        ProductRepository productRepository,
+        UserRepository userRepository,
+        PasswordEncoder passwordEncoder
+    ) {
         return args -> {
+            if (userRepository.findAll().isEmpty()) {
+                StockUser admin = new StockUser();
+                admin.setUsername("admin");
+                admin.setPassword(passwordEncoder.encode("admin123"));
+                admin.setRole(UserRole.ADMIN);
+                userRepository.save(admin);
+
+                StockUser staff = new StockUser();
+                staff.setUsername("staff");
+                staff.setPassword(passwordEncoder.encode("staff123"));
+                staff.setRole(UserRole.STAFF);
+                userRepository.save(staff);
+            }
+
             if (!categoryRepository.findAll().isEmpty()) {
                 return;
             }
+
+            StockUser admin = userRepository.findByUsernameIgnoreCase("admin").orElseThrow();
+            StockUser staff = userRepository.findByUsernameIgnoreCase("staff").orElseThrow();
 
             Category electronics = new Category();
             electronics.setName("Electronics");
@@ -35,6 +61,7 @@ public class DataInitializer {
             keyboard.setThreshold(10);
             keyboard.setPrice(new BigDecimal("45.90"));
             keyboard.setCategory(electronics);
+            keyboard.setManager(admin);
             productRepository.save(keyboard);
 
             Product notebook = new Product();
@@ -43,6 +70,7 @@ public class DataInitializer {
             notebook.setThreshold(25);
             notebook.setPrice(new BigDecimal("2.40"));
             notebook.setCategory(office);
+            notebook.setManager(staff);
             productRepository.save(notebook);
         };
     }

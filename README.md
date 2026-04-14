@@ -182,6 +182,54 @@ A professional, modern dashboard-based UI with responsive design:
 ✅ Live alert monitoring with auto-refresh  
 ✅ Clean separation of concerns (Service → Controller → Component)
 
+## 6.6) Weekly UML-Based Code Implementation (Assignment Notes)
+
+This week, the backend was extended according to the UML class diagram in `project-diagram.drawio.png`.
+The implementation follows object-oriented design principles and a modular architecture.
+
+### UML classes implemented
+- `USERS` table modeled as `StockUser` entity (`id`, `username`, `password`, `role`)
+- `CATEGORIES` table mapped with `Category` entity (`id`, `name`, `description`)
+- `PRODUCTS` table mapped with `Product` entity (`id`, `name`, `quantity`, `threshold`, `price`, `category_id`, `manager_id`)
+- `ALERTS` table implemented as persistent `Alert` entity (`id`, `message`, `created_at`, `product_id`)
+
+### Object-oriented principles applied
+- Encapsulation:
+  - Entity fields are private and exposed through controlled getters/setters.
+  - `Request` and `Response` DTOs separate API contracts from persistence models.
+- Inheritance:
+  - Shared identity logic is moved to `BaseEntity`.
+  - `Category`, `Product`, `StockUser`, and `Alert` reuse this common structure through inheritance.
+- Polymorphism:
+  - Alert generation is designed with a strategy-style `AlertPolicy` interface.
+  - `CriticalStockAlertPolicy` and `ThresholdStockAlertPolicy` provide different behaviors under the same abstraction.
+
+### Modular backend structure
+- `controller` layer: REST endpoints (`/api/users`, `/api/products`, `/api/categories`, `/api/alerts`, `/api/analysis`)
+- `service` layer: business rules, stock checks, alert synchronization, analysis metrics
+- `repository` layer: JPA data access operations
+- `config` layer: security, CORS, and startup seed data
+
+### This week's code outcomes
+- Added full CRUD flow for user management and integrated role data into the domain.
+- Added the UML-based management relation from `USERS` to `PRODUCTS` (`manager_id`).
+- Migrated alert mechanism from only runtime calculation to persistent database records.
+- Added `/api/analysis/overview` endpoint for dashboard analysis metrics.
+- Updated security user loading from in-memory users to database-backed users (seeded `admin` and `staff`).
+
+### UML and project visuals
+
+UML Class Diagram:
+
+![UML Class Diagram](project-diagram.drawio.png)
+
+Screenshots:
+
+![System Summary](ozet.png)
+![Category Screen](kategori.png)
+![Products Screen](urunler.png)
+![Alerts Screen](uyarilar.png)
+
 ---
 
 ## 7) How to Run (Local Development)
