@@ -195,14 +195,26 @@ The implementation follows object-oriented design principles and a modular archi
 
 ### Object-oriented principles applied
 - Encapsulation:
-  - Entity fields are private and exposed through controlled getters/setters.
-  - `Request` and `Response` DTOs separate API contracts from persistence models.
+  - Entity fields are defined as `private`, and external access is controlled via getters/setters.
+  - Example classes: [Category](backend/src/main/java/com/stockwise/backend/category/Category.java), [Product](backend/src/main/java/com/stockwise/backend/product/Product.java), [StockUser](backend/src/main/java/com/stockwise/backend/user/StockUser.java), [Alert](backend/src/main/java/com/stockwise/backend/alert/Alert.java)
+  - DTOs are used to separate API contracts from persistence/domain models:
+    [CategoryRequest](backend/src/main/java/com/stockwise/backend/category/CategoryRequest.java),
+    [CategoryResponse](backend/src/main/java/com/stockwise/backend/category/CategoryResponse.java),
+    [ProductRequest](backend/src/main/java/com/stockwise/backend/product/ProductRequest.java),
+    [ProductResponse](backend/src/main/java/com/stockwise/backend/product/ProductResponse.java),
+    [AlertResponse](backend/src/main/java/com/stockwise/backend/alert/AlertResponse.java)
 - Inheritance:
-  - Shared identity logic is moved to `BaseEntity`.
-  - `Category`, `Product`, `StockUser`, and `Alert` reuse this common structure through inheritance.
+  - Shared identity logic (`id`) is centralized in [BaseEntity](backend/src/main/java/com/stockwise/backend/common/BaseEntity.java).
+  - [Category](backend/src/main/java/com/stockwise/backend/category/Category.java), [Product](backend/src/main/java/com/stockwise/backend/product/Product.java), [StockUser](backend/src/main/java/com/stockwise/backend/user/StockUser.java), and [Alert](backend/src/main/java/com/stockwise/backend/alert/Alert.java) inherit from `BaseEntity`.
 - Polymorphism:
-  - Alert generation is designed with a strategy-style `AlertPolicy` interface.
-  - `CriticalStockAlertPolicy` and `ThresholdStockAlertPolicy` provide different behaviors under the same abstraction.
+  - Alert generation is designed via the [AlertPolicy](backend/src/main/java/com/stockwise/backend/alert/policy/AlertPolicy.java) interface as a shared abstraction.
+  - [CriticalStockAlertPolicy](backend/src/main/java/com/stockwise/backend/alert/policy/CriticalStockAlertPolicy.java) and [ThresholdStockAlertPolicy](backend/src/main/java/com/stockwise/backend/alert/policy/ThresholdStockAlertPolicy.java) implement the same interface with different behaviors.
+  - In [AlertService](backend/src/main/java/com/stockwise/backend/alert/AlertService.java), the appropriate policy is selected at runtime through `List<AlertPolicy>`, demonstrating practical polymorphism.
+
+### Presentation-ready OOP summary (EN)
+- Encapsulation: Data is protected by keeping fields `private` and exposing controlled access methods.
+- Inheritance: Shared structure is collected in `BaseEntity`, reducing duplicated code.
+- Polymorphism: Different alert rules run through the same `AlertPolicy` contract.
 
 ### Modular backend structure
 - `controller` layer: REST endpoints (`/api/users`, `/api/products`, `/api/categories`, `/api/alerts`, `/api/analysis`)
