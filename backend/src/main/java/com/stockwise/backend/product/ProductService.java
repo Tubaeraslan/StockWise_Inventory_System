@@ -11,16 +11,42 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProductService {
-
+    private final com.stockwise.backend.alert.AlertService alertService;
     private final ProductRepository productRepository;
     private final CategoryService categoryService;
     private final UserService userService;
+    private final SaleRepository saleRepository;
 
-    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService) {
+    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService, com.stockwise.backend.alert.AlertService alertService, SaleRepository saleRepository) {
         this.productRepository = productRepository;
         this.categoryService = categoryService;
         this.userService = userService;
+        this.alertService = alertService;
+        this.saleRepository = saleRepository;
     }
+    @Transactional
+    public ProductResponse sellProduct(Long productId, int amount, Long userId) {
+        if (amount <= 0) throw new IllegalArgumentException("Satış miktarı pozitif olmalı");
+        Product product = getEntity(productId);
+        if (product.getQuantity() < amount) {
+            throw new IllegalArgumentException("Yeterli stok yok");
+        }
+        product.setQuantity(product.getQuantity() - amount);
+        Product saved = productRepository.save(product);
+        // Satış kaydı oluştur
+        StockUser user = userService.getEntity(userId);
+        Sale sale = new Sale();
+        sale.setProduct(product);
+        sale.setUser(user);
+        sale.setAmount(amount);
+        sale.setSaleTime(java.time.LocalDateTime.now());
+        saleRepository.save(sale);
+        // Alert güncelle
+        alertService.getActiveAlerts(); // Alert'leri senkronize et
+        return toResponse(saved);
+    }
+
+    // Diğer constructor kaldırıldı, yukarıdaki constructor kullanılacak
 
     @Transactional(readOnly = true)
     public List<ProductResponse> getAll(String name) {

@@ -18,6 +18,20 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/products")
 public class ProductController {
 
+    public static class SellRequest {
+        public Long productId;
+        public Integer amount;
+        public Long userId;
+    }
+
+    @PostMapping("/sell")
+    public ProductResponse sellProduct(@RequestBody SellRequest request) {
+        if (request.productId == null || request.amount == null || request.userId == null) {
+            throw new IllegalArgumentException("Ürün, miktar ve kullanıcı zorunlu");
+        }
+        return productService.sellProduct(request.productId, request.amount, request.userId);
+    }
+
     private final ProductService productService;
 
     public ProductController(ProductService productService) {

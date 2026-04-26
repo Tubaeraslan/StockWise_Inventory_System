@@ -43,7 +43,7 @@ public class SecurityConfig {
     private UserDetails toUserDetails(StockUser user) {
         return User.withUsername(user.getUsername())
             .password(user.getPassword())
-            .roles(user.getRole().name())
+            .roles(user.getPermission())
             .build();
     }
 

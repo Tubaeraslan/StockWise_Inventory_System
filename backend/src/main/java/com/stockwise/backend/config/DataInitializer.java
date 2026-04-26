@@ -6,7 +6,6 @@ import com.stockwise.backend.product.Product;
 import com.stockwise.backend.product.ProductRepository;
 import com.stockwise.backend.user.StockUser;
 import com.stockwise.backend.user.UserRepository;
-import com.stockwise.backend.user.UserRole;
 import java.math.BigDecimal;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
@@ -28,13 +27,13 @@ public class DataInitializer {
                 StockUser admin = new StockUser();
                 admin.setUsername("admin");
                 admin.setPassword(passwordEncoder.encode("admin123"));
-                admin.setRole(UserRole.ADMIN);
+                admin.setPermission("ADMIN");
                 userRepository.save(admin);
 
                 StockUser staff = new StockUser();
                 staff.setUsername("staff");
                 staff.setPassword(passwordEncoder.encode("staff123"));
-                staff.setRole(UserRole.STAFF);
+                staff.setPermission("STAFF");
                 userRepository.save(staff);
             }
 

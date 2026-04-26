@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getProducts, getCategories, createProduct } from '../services/api';
+import { sellProduct } from '../services/api';
 
-export default function ProductList() {
+export default function ProductList({ isAdmin, user }) {
+    const [sellAmounts, setSellAmounts] = useState({});
+    const [selling, setSelling] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -35,13 +38,15 @@ export default function ProductList() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.name || !formData.quantity || !formData.threshold || !formData.price || !formData.categoryId) {
       alert('Tüm alanlar gerekli');
       return;
     }
-    
+
     try {
       setSubmitting(true);
+
       await createProduct({
         name: formData.name,
         quantity: parseInt(formData.quantity),
@@ -49,9 +54,18 @@ export default function ProductList() {
         price: parseFloat(formData.price),
         categoryId: parseInt(formData.categoryId)
       });
-      setFormData({ name: '', quantity: '', threshold: '', price: '', categoryId: '' });
+
+      setFormData({
+        name: '',
+        quantity: '',
+        threshold: '',
+        price: '',
+        categoryId: ''
+      });
+
       const res = await getProducts();
       setProducts(res.data);
+
     } catch (err) {
       alert('Hata: ' + err.message);
     } finally {
@@ -69,110 +83,141 @@ export default function ProductList() {
 
   return (
     <div className="container">
-      <h1 style={{ marginBottom: '2rem', color: '#667eea', fontSize: '2rem', fontWeight: 'bold' }}>📦 Ürünler</h1>
-      
-      <div className="form-section">
-        <h3>Yeni Ürün Ekle</h3>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Ürün Adı</label>
-              <input
-                type="text"
-                name="name"
-                className="form-control"
-                placeholder="Laptop, Kalem, vs."
-                value={formData.name}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Kategori</label>
-              <select
-                name="categoryId"
-                className="form-control"
+      <h1 style={{ marginBottom: '2rem', color: '#667eea', fontSize: '2rem', fontWeight: 'bold' }}>
+        📦 Ürünler
+      </h1>
+
+      {isAdmin && (
+        <div className="form-section">
+          <h3>Yeni Ürün Ekle / Stok Yenile</h3>
+
+          <form onSubmit={handleSubmit}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gap: '1rem',
+              marginBottom: '1.5rem'
+            }}>
+
+              <input type="text" name="name" placeholder="Ürün adı"
+                value={formData.name} onChange={handleChange} required />
+
+              <select name="categoryId"
                 value={formData.categoryId}
-                onChange={handleChange}
-              >
+                onChange={handleChange} required>
                 <option value="">Kategori Seç</option>
                 {categories.map(cat => (
                   <option key={cat.id} value={cat.id}>{cat.name}</option>
                 ))}
               </select>
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Mevcut Miktar</label>
-              <input
-                type="number"
-                name="quantity"
-                className="form-control"
-                placeholder="0"
+
+              <input type="number" name="quantity"
+                placeholder="Miktar"
                 value={formData.quantity}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Min. Eşik</label>
-              <input
-                type="number"
-                name="threshold"
-                className="form-control"
+                onChange={handleChange} required />
+
+              <input type="number" name="threshold"
                 placeholder="Minimum stok"
                 value={formData.threshold}
-                onChange={handleChange}
-              />
-            </div>
-            <div>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Fiyat (₺)</label>
-              <input
-                type="number"
-                step="0.01"
-                name="price"
-                className="form-control"
-                placeholder="0.00"
+                onChange={handleChange} required />
+
+              <input type="number" step="0.01" name="price"
+                placeholder="Fiyat"
                 value={formData.price}
-                onChange={handleChange}
-              />
+                onChange={handleChange} required />
             </div>
-          </div>
-          <button type="submit" className="btn btn-primary" disabled={submitting}>
-            {submitting ? '⏳ Ekleniyor...' : '✅ Ürün Ekle'}
-          </button>
-        </form>
-      </div>
 
-      {error && <div className="alert alert-danger"><strong>❌ Hata:</strong> {error}</div>}
+            <button type="submit" disabled={submitting}>
+              {submitting ? '⏳ Ekleniyor...' : '✅ Ürün Ekle'}
+            </button>
+          </form>
+        </div>
+      )}
 
-      <div style={{ marginTop: '2rem', overflowX: 'auto' }}>
-        <table className="table">
-          <thead>
-            <tr>
-              <th>Ürün Adı</th>
-              <th>Kategori</th>
-              <th>Mevcut</th>
-              <th>Min. Eşik</th>
-              <th>Fiyat</th>
-              <th>Durum</th>
+      {error && <div>❌ {error}</div>}
+
+      <table style={{
+        width: '100%',
+        borderCollapse: 'collapse',
+        background: '#fff',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        borderRadius: 8,
+        overflow: 'hidden',
+        marginTop: 24
+      }}>
+        <thead style={{ background: '#f6f8fa' }}>
+          <tr>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Ürün</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Kategori</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Miktar</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Eşik</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Fiyat</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Durum</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Satış</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map(prod => (
+            <tr key={prod.id} style={{ borderBottom: '1px solid #e2e8f0', background: prod.lowStock ? '#fff5f5' : 'inherit' }}>
+              <td style={{ padding: '10px 8px', fontWeight: 500 }}>{prod.name}</td>
+              <td style={{ padding: '10px 8px' }}>{prod.categoryName}</td>
+              <td style={{ padding: '10px 8px', textAlign: 'right' }}>{prod.quantity}</td>
+              <td style={{ padding: '10px 8px', textAlign: 'right' }}>{prod.threshold}</td>
+              <td style={{ padding: '10px 8px', textAlign: 'right' }}>₺{prod.price.toFixed(2)}</td>
+              <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                {prod.lowStock ? <span style={{ color: '#e53e3e', fontWeight: 600 }}>⚠️ Düşük</span> : <span style={{ color: '#38a169', fontWeight: 600 }}>✅ Normal</span>}
+              </td>
+              <td style={{ padding: '10px 8px', textAlign: 'center' }}>
+                <input
+                  type="number"
+                  min="1"
+                  style={{ width: 60, marginRight: 8, border: '1px solid #cbd5e1', borderRadius: 4, padding: '4px 6px' }}
+                  value={sellAmounts[prod.id] || ''}
+                  onChange={e => setSellAmounts(a => ({ ...a, [prod.id]: e.target.value }))}
+                  disabled={selling[prod.id]}
+                />
+                <button
+                  onClick={async () => {
+                    const amount = parseInt(sellAmounts[prod.id], 10);
+                    if (!amount || amount <= 0) {
+                      alert('Geçerli bir miktar girin');
+                      return;
+                    }
+                    if (!user || !user.id) {
+                      alert('Kullanıcı bilgisi bulunamadı!');
+                      return;
+                    }
+                    setSelling(s => ({ ...s, [prod.id]: true }));
+                    try {
+                      await sellProduct(prod.id, amount, user.id);
+                      const res = await getProducts();
+                      setProducts(res.data);
+                      setSellAmounts(a => ({ ...a, [prod.id]: '' }));
+                    } catch (err) {
+                      alert('Satış hatası: ' + (err.response?.data?.message || err.message));
+                    } finally {
+                      setSelling(s => ({ ...s, [prod.id]: false }));
+                    }
+                  }}
+                  disabled={selling[prod.id]}
+                  style={{
+                    background: '#667eea',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: 4,
+                    padding: '6px 14px',
+                    fontWeight: 500,
+                    cursor: selling[prod.id] ? 'not-allowed' : 'pointer',
+                    transition: 'background 0.2s',
+                  }}
+                >
+                  {selling[prod.id] ? 'Satılıyor...' : 'Sat'}
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {products.map((prod) => (
-              <tr key={prod.id} style={prod.lowStock ? { backgroundColor: '#fff5f5' } : {}}>
-                <td style={{ fontWeight: '500' }}>{prod.name}</td>
-                <td>{prod.categoryName}</td>
-                <td><strong>{prod.quantity}</strong></td>
-                <td>{prod.threshold}</td>
-                <td>₺{prod.price.toFixed(2)}</td>
-                <td>
-                  <span className={`badge ${prod.lowStock ? 'bg-danger' : 'bg-success'}`}>
-                    {prod.lowStock ? '⚠️ Düşük' : '✅ Normal'}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

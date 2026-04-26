@@ -1,4 +1,10 @@
 import axios from 'axios';
+export const getSalesRanking = (year, month) =>
+  api.get(`/api/analysis/sales-ranking?year=${year}&month=${month}`);
+
+
+export const sellProduct = (productId, amount, userId) =>
+  api.post('/api/products/sell', { productId, amount, userId });
 
 const API_BASE_URL = 'http://localhost:8080';
 

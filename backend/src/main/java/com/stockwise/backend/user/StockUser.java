@@ -3,8 +3,7 @@ package com.stockwise.backend.user;
 import com.stockwise.backend.common.BaseEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+// ...existing imports...
 import jakarta.persistence.Table;
 
 @Entity
@@ -17,9 +16,8 @@ public class StockUser extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    private UserRole role;
+    @Column(nullable = false, length = 50)
+    private String permission;
 
     public String getUsername() {
         return username;
@@ -37,11 +35,11 @@ public class StockUser extends BaseEntity {
         this.password = password;
     }
 
-    public UserRole getRole() {
-        return role;
+    public String getPermission() {
+        return permission;
     }
 
-    public void setRole(UserRole role) {
-        this.role = role;
+    public void setPermission(String permission) {
+        this.permission = permission;
     }
 }

@@ -63,13 +63,14 @@ public class UserService {
             .orElseThrow(() -> new ResourceNotFoundException("User not found: " + id));
     }
 
+
     private void applyRequest(StockUser user, UserRequest request) {
         user.setUsername(request.username().trim());
         user.setPassword(passwordEncoder.encode(request.password()));
-        user.setRole(request.role());
+        user.setPermission(request.permission());
     }
 
     private UserResponse toResponse(StockUser user) {
-        return new UserResponse(user.getId(), user.getUsername(), user.getRole());
+        return new UserResponse(user.getId(), user.getUsername(), user.getPermission());
     }
 }

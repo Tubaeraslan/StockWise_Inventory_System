@@ -1,3 +1,9 @@
+import org.springframework.web.bind.annotation.RequestParam;
+import java.util.List;
+    @GetMapping("/sales-ranking")
+    public List<SalesRankingResponse> getSalesRanking(@RequestParam int year, @RequestParam int month) {
+        return analysisService.getSalesRanking(year, month);
+    }
 package com.stockwise.backend.analysis;
 
 import org.springframework.web.bind.annotation.GetMapping;
