@@ -52,7 +52,8 @@ export default function ProductList({ isAdmin, user }) {
         quantity: parseInt(formData.quantity),
         threshold: parseInt(formData.threshold),
         price: parseFloat(formData.price),
-        categoryId: parseInt(formData.categoryId)
+        categoryId: parseInt(formData.categoryId),
+        userId: user && user.id
       });
 
       setFormData({

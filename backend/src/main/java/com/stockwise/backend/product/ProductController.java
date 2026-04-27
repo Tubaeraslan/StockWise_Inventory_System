@@ -50,18 +50,18 @@ public class ProductController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ProductResponse create(@Valid @RequestBody ProductRequest request) {
-        return productService.create(request);
+    public ProductResponse create(@Valid @RequestBody ProductRequest request, @RequestParam Long userId) {
+        return productService.create(request, userId);
     }
 
     @PutMapping("/{id}")
-    public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductRequest request) {
-        return productService.update(id, request);
+    public ProductResponse update(@PathVariable Long id, @Valid @RequestBody ProductRequest request, @RequestParam Long userId) {
+        return productService.update(id, request, userId);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        productService.delete(id);
+    public void delete(@PathVariable Long id, @RequestParam Long userId) {
+        productService.delete(id, userId);
     }
 }

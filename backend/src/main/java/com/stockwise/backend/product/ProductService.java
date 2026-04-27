@@ -16,13 +16,15 @@ public class ProductService {
     private final CategoryService categoryService;
     private final UserService userService;
     private final SaleRepository saleRepository;
+    private final com.stockwise.backend.user.UserActivityLogService userActivityLogService;
 
-    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService, com.stockwise.backend.alert.AlertService alertService, SaleRepository saleRepository) {
+    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService, com.stockwise.backend.alert.AlertService alertService, SaleRepository saleRepository, com.stockwise.backend.user.UserActivityLogService userActivityLogService) {
         this.productRepository = productRepository;
         this.categoryService = categoryService;
         this.userService = userService;
         this.alertService = alertService;
         this.saleRepository = saleRepository;
+        this.userActivityLogService = userActivityLogService;
     }
     @Transactional
     public ProductResponse sellProduct(Long productId, int amount, Long userId) {
@@ -62,23 +64,28 @@ public class ProductService {
     }
 
     @Transactional
-    public ProductResponse create(ProductRequest request) {
+    public ProductResponse create(ProductRequest request, Long userId) {
         Product product = new Product();
         applyRequest(product, request);
-        return toResponse(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        userActivityLogService.log(userId, "PRODUCT_CREATE: " + saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
-    public ProductResponse update(Long id, ProductRequest request) {
+    public ProductResponse update(Long id, ProductRequest request, Long userId) {
         Product product = getEntity(id);
         applyRequest(product, request);
-        return toResponse(productRepository.save(product));
+        Product saved = productRepository.save(product);
+        userActivityLogService.log(userId, "PRODUCT_UPDATE: " + saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Long userId) {
         Product product = getEntity(id);
         productRepository.delete(product);
+        userActivityLogService.log(userId, "PRODUCT_DELETE: " + product.getName());
     }
 
     @Transactional(readOnly = true)

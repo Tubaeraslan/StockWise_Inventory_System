@@ -9,9 +9,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final com.stockwise.backend.user.UserActivityLogService userActivityLogService;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, com.stockwise.backend.user.UserActivityLogService userActivityLogService) {
         this.categoryRepository = categoryRepository;
+        this.userActivityLogService = userActivityLogService;
     }
 
     @Transactional(readOnly = true)
@@ -25,7 +27,7 @@ public class CategoryService {
     }
 
     @Transactional
-    public CategoryResponse create(CategoryRequest request) {
+    public CategoryResponse create(CategoryRequest request, Long userId) {
         categoryRepository.findByNameIgnoreCase(request.name()).ifPresent(existing -> {
             throw new IllegalArgumentException("Category already exists: " + request.name());
         });
@@ -33,21 +35,26 @@ public class CategoryService {
         Category category = new Category();
         category.setName(request.name().trim());
         category.setDescription(request.description());
-        return toResponse(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        userActivityLogService.log(userId, "CATEGORY_CREATE: " + saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
-    public CategoryResponse update(Long id, CategoryRequest request) {
+    public CategoryResponse update(Long id, CategoryRequest request, Long userId) {
         Category category = getEntity(id);
         category.setName(request.name().trim());
         category.setDescription(request.description());
-        return toResponse(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        userActivityLogService.log(userId, "CATEGORY_UPDATE: " + saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
-    public void delete(Long id) {
+    public void delete(Long id, Long userId) {
         Category category = getEntity(id);
         categoryRepository.delete(category);
+        userActivityLogService.log(userId, "CATEGORY_DELETE: " + category.getName());
     }
 
     @Transactional(readOnly = true)

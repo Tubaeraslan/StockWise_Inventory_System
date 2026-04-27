@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { SalesBarChart, SalesPieChart } from './SalesCharts';
 import CategoryList from './CategoryList';
 import ProductList from './ProductList';
 import AlertList from './AlertList';
@@ -175,27 +176,37 @@ export default function Dashboard({ user, onLogout }) {
                       <div style={{ color: '#718096', marginTop: 8 }}>Yükleniyor...</div>
                     ) : rankingError ? (
                       <div style={{ color: '#e53e3e', marginTop: 8 }}>{rankingError}</div>
+                    ) : salesRanking.length === 0 ? (
+                      <div style={{ color: '#718096', marginTop: 16 }}>Kayıt yok</div>
                     ) : (
-                      <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderRadius: 8, overflow: 'hidden', marginTop: 12 }}>
-                        <thead style={{ background: '#f6f8fa' }}>
-                          <tr>
-                            <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>#</th>
-                            <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Ürün</th>
-                            <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Toplam Satış</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {salesRanking.length === 0 ? (
-                            <tr><td colSpan={3} style={{ textAlign: 'center', color: '#718096', padding: 16 }}>Kayıt yok</td></tr>
-                          ) : salesRanking.map((row, idx) => (
-                            <tr key={row.productId} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                              <td style={{ padding: '8px 8px', fontWeight: 500 }}>{idx + 1}</td>
-                              <td style={{ padding: '8px 8px' }}>{row.productName}</td>
-                              <td style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600 }}>{row.totalSold}</td>
+                      <>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 32, marginTop: 24, marginBottom: 24 }}>
+                          <div style={{ flex: 1, minWidth: 320, maxWidth: 500, background: '#f8fafc', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 16 }}>
+                            <SalesBarChart data={salesRanking} />
+                          </div>
+                          <div style={{ flex: 1, minWidth: 320, maxWidth: 400, background: '#f8fafc', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', padding: 16 }}>
+                            <SalesPieChart data={salesRanking} />
+                          </div>
+                        </div>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', borderRadius: 8, overflow: 'hidden', marginTop: 12 }}>
+                          <thead style={{ background: '#f6f8fa' }}>
+                            <tr>
+                              <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>#</th>
+                              <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Ürün</th>
+                              <th style={{ padding: '10px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Toplam Satış</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {salesRanking.map((row, idx) => (
+                              <tr key={row.productId} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                                <td style={{ padding: '8px 8px', fontWeight: 500 }}>{idx + 1}</td>
+                                <td style={{ padding: '8px 8px' }}>{row.productName}</td>
+                                <td style={{ padding: '8px 8px', textAlign: 'right', fontWeight: 600 }}>{row.totalSold}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </>
                     )}
                   </div>
                 </div>
@@ -235,7 +246,7 @@ export default function Dashboard({ user, onLogout }) {
             </div>
           </div>
         )}
-        {activeTab === 'categories' && <CategoryList />}
+        {activeTab === 'categories' && <CategoryList user={user} />}
         {activeTab === 'products' && <ProductList isAdmin={isAdmin} user={user} />}
         {activeTab === 'alerts' && <AlertList />}
       </div>

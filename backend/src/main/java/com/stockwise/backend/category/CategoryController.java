@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequestMapping("/api/categories")
@@ -35,18 +36,18 @@ public class CategoryController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public CategoryResponse create(@Valid @RequestBody CategoryRequest request) {
-        return categoryService.create(request);
+    public CategoryResponse create(@Valid @RequestBody CategoryRequest request, @RequestParam Long userId) {
+        return categoryService.create(request, userId);
     }
 
     @PutMapping("/{id}")
-    public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request) {
-        return categoryService.update(id, request);
+    public CategoryResponse update(@PathVariable Long id, @Valid @RequestBody CategoryRequest request, @RequestParam Long userId) {
+        return categoryService.update(id, request, userId);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        categoryService.delete(id);
+    public void delete(@PathVariable Long id, @RequestParam Long userId) {
+        categoryService.delete(id, userId);
     }
 }

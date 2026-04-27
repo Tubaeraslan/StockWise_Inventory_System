@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getCategories, createCategory } from '../services/api';
 
-export default function CategoryList() {
+export default function CategoryList({ user }) {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -32,10 +32,13 @@ export default function CategoryList() {
       alert('Kategori adı gerekli');
       return;
     }
-    
+    if (!user || !user.id) {
+      alert('Kullanıcı bilgisi bulunamadı!');
+      return;
+    }
     try {
       setSubmitting(true);
-      await createCategory({ name, description });
+      await createCategory({ name, description, userId: user.id });
       setName('');
       setDescription('');
       fetchCategories();

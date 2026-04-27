@@ -18,7 +18,13 @@ export const api = axios.create({
 export const getCategories = () => api.get('/api/categories');
 export const getProducts = () => api.get('/api/products');
 export const getAlerts = () => api.get('/api/alerts/active');
-export const createProduct = (product) => api.post('/api/products', product);
-export const createCategory = (category) => api.post('/api/categories', category);
+export const createProduct = (product) => {
+  const { userId, ...rest } = product;
+  return api.post(`/api/products?userId=${userId}`, rest);
+};
+export const createCategory = (category) => {
+  const { userId, ...rest } = category;
+  return api.post(`/api/categories?userId=${userId}`, rest);
+};
 export const updateProduct = (id, product) => api.put(`/api/products/${id}`, product);
 export const deleteProduct = (id) => api.delete(`/api/products/${id}`);

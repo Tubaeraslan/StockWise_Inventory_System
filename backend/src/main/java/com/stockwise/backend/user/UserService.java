@@ -11,10 +11,12 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UserActivityLogService userActivityLogService;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, UserActivityLogService userActivityLogService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.userActivityLogService = userActivityLogService;
     }
 
     @Transactional(readOnly = true)
@@ -35,7 +37,9 @@ public class UserService {
 
         StockUser user = new StockUser();
         applyRequest(user, request);
-        return toResponse(userRepository.save(user));
+        StockUser saved = userRepository.save(user);
+        userActivityLogService.log(saved.getId(), "CREATE_USER");
+        return toResponse(saved);
     }
 
     @Transactional
@@ -48,13 +52,16 @@ public class UserService {
         });
 
         applyRequest(user, request);
-        return toResponse(userRepository.save(user));
+        StockUser saved = userRepository.save(user);
+        userActivityLogService.log(saved.getId(), "UPDATE_USER");
+        return toResponse(saved);
     }
 
     @Transactional
     public void delete(Long id) {
         StockUser user = getEntity(id);
         userRepository.delete(user);
+        userActivityLogService.log(user.getId(), "DELETE_USER");
     }
 
     @Transactional(readOnly = true)
