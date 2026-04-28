@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 public record ProductResponse(
     Long id,
+    String barcode,
     String name,
     Integer quantity,
     Integer threshold,

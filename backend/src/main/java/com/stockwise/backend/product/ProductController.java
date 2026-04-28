@@ -24,12 +24,26 @@ public class ProductController {
         public Long userId;
     }
 
+    public static class SellByBarcodeRequest {
+        public String barcode;
+        public Integer amount;
+        public Long userId;
+    }
+
     @PostMapping("/sell")
     public ProductResponse sellProduct(@RequestBody SellRequest request) {
         if (request.productId == null || request.amount == null || request.userId == null) {
             throw new IllegalArgumentException("Ürün, miktar ve kullanıcı zorunlu");
         }
         return productService.sellProduct(request.productId, request.amount, request.userId);
+    }
+
+    @PostMapping("/sell-by-barcode")
+    public ProductResponse sellByBarcode(@RequestBody SellByBarcodeRequest request) {
+        if (request.barcode == null || request.barcode.isBlank() || request.amount == null || request.userId == null) {
+            throw new IllegalArgumentException("Barkod, miktar ve kullanıcı zorunlu");
+        }
+        return productService.sellByBarcode(request.barcode.trim(), request.amount, request.userId);
     }
 
     private final ProductService productService;

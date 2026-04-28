@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getProducts, getCategories, createProduct } from '../services/api';
-import { sellProduct } from '../services/api';
+import { getProducts, getCategories, createProduct, sellProduct, sellByBarcode } from '../services/api';
 
 export default function ProductList({ isAdmin, user }) {
     const [sellAmounts, setSellAmounts] = useState({});
@@ -17,6 +16,9 @@ export default function ProductList({ isAdmin, user }) {
     price: '',
     categoryId: ''
   });
+  const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeAmount, setBarcodeAmount] = useState(1);
+  const [barcodeSubmitting, setBarcodeSubmitting] = useState(false);
 
   useEffect(() => {
     Promise.all([getProducts(), getCategories()])
@@ -71,6 +73,25 @@ export default function ProductList({ isAdmin, user }) {
       alert('Hata: ' + err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleBarcodeSubmit = async (e) => {
+    e && e.preventDefault && e.preventDefault();
+    if (!barcodeInput || !barcodeInput.trim()) return;
+    if (!user || !user.id) { alert('Kullanıcı bilgisi bulunamadı!'); return; }
+    const amount = parseInt(barcodeAmount, 10) || 1;
+    try {
+      setBarcodeSubmitting(true);
+      await sellByBarcode(barcodeInput.trim(), amount, user.id);
+      const res = await getProducts();
+      setProducts(res.data);
+      setBarcodeInput('');
+      setBarcodeAmount(1);
+    } catch (err) {
+      alert('Barkod satış hatası: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setBarcodeSubmitting(false);
     }
   };
 
@@ -136,6 +157,26 @@ export default function ProductList({ isAdmin, user }) {
       )}
 
       {error && <div>❌ {error}</div>}
+
+      <div style={{ margin: '1rem 0', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+        <input
+          placeholder="Barkod okut (veya gir)"
+          value={barcodeInput}
+          onChange={e => setBarcodeInput(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') handleBarcodeSubmit(); }}
+          style={{ padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1', width: 220 }}
+        />
+        <input
+          type="number"
+          min="1"
+          value={barcodeAmount}
+          onChange={e => setBarcodeAmount(e.target.value)}
+          style={{ width: 80, padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1' }}
+        />
+        <button onClick={handleBarcodeSubmit} disabled={barcodeSubmitting} style={{ background: '#48bb78', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 6 }}>
+          {barcodeSubmitting ? 'Satılıyor...' : 'Satış (Barkod)'}
+        </button>
+      </div>
 
       <table style={{
         width: '100%',

@@ -6,6 +6,9 @@ export const getSalesRanking = (year, month) =>
 export const sellProduct = (productId, amount, userId) =>
   api.post('/api/products/sell', { productId, amount, userId });
 
+export const sellByBarcode = (barcode, amount, userId) =>
+  api.post('/api/products/sell-by-barcode', { barcode, amount, userId });
+
 const API_BASE_URL = 'http://localhost:8080';
 
 export const api = axios.create({

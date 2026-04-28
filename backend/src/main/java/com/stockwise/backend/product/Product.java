@@ -82,4 +82,15 @@ public class Product extends BaseEntity {
     public void setManager(StockUser manager) {
         this.manager = manager;
     }
+
+    @Column(unique = true, length = 64)
+    private String barcode;
+
+    public String getBarcode() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode = barcode;
+    }
 }

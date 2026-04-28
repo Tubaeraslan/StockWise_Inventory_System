@@ -13,6 +13,7 @@ public record ProductRequest(
     @NotNull @Min(0) Integer threshold,
     @NotNull @DecimalMin("0.0") BigDecimal price,
     @NotNull Long categoryId,
-    Long managerId
+    Long managerId,
+    @Size(max = 64) String barcode
 ) {
 }
