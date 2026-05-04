@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getCategories, createCategory } from '../services/api';
+import { updateCategory as apiUpdateCategory, deleteCategory as apiDeleteCategory } from '../services/categoryApi';
+import { FaEdit, FaTrash, FaCheck, FaTimes } from 'react-icons/fa';
 
 export default function CategoryList({ user }) {
   const [categories, setCategories] = useState([]);
@@ -8,6 +10,10 @@ export default function CategoryList({ user }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  const [editCat, setEditCat] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
   useEffect(() => {
     fetchCategories();
@@ -26,16 +32,50 @@ export default function CategoryList({ user }) {
     }
   };
 
+  const openEditModal = (cat) => {
+    setEditCat(cat);
+    setEditName(cat.name);
+    setEditDescription(cat.description || '');
+  };
+
+  const handleEditSave = async () => {
+    try {
+      if (!editCat || !user?.id) return;
+      
+      await apiUpdateCategory(
+        editCat.id, 
+        { name: editName, description: editDescription }, 
+        user.id
+      );
+      
+      setEditCat(null);
+      fetchCategories();
+    } catch (err) {
+      alert("Güncelleme hatası: " + (err.response?.data?.message || "userId parametresi eksik veya geçersiz."));
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!id || !user?.id) return;
+    if (window.confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
+      try {
+        await apiDeleteCategory(id, user.id);
+        fetchCategories();
+      } catch (err) {
+        const msg = err.response?.data?.message || "";
+        if (msg.includes("foreign key") || err.message.includes("400")) {
+          alert("Silme hatası: Bu kategoriye bağlı ürünler var. Önce ürünleri silmeli veya başka kategoriye taşımalısın.");
+        } else {
+          alert("Silme hatası: " + (msg || err.message));
+        }
+      }
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) {
-      alert('Kategori adı gerekli');
-      return;
-    }
-    if (!user || !user.id) {
-      alert('Kullanıcı bilgisi bulunamadı!');
-      return;
-    }
+    if (!name.trim()) return alert('Kategori adı gerekli');
+    if (!user?.id) return alert('Kullanıcı bilgisi bulunamadı!');
     try {
       setSubmitting(true);
       await createCategory({ name, description, userId: user.id });
@@ -49,61 +89,76 @@ export default function CategoryList({ user }) {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="container" style={{ textAlign: 'center', paddingTop: '3rem' }}>
-        <div style={{ fontSize: '1.2rem', color: '#718096' }}>⏳ Yükleniyor...</div>
-      </div>
-    );
-  }
+  if (loading) return <div style={{ textAlign: 'center', padding: '3rem', color: '#718096' }}>⏳ Yükleniyor...</div>;
 
   return (
     <div className="container">
       <h1 style={{ marginBottom: '2rem', color: '#667eea', fontSize: '2rem', fontWeight: 'bold' }}>📂 Kategoriler</h1>
-      
       <div className="form-section">
         <h3>Yeni Kategori Ekle</h3>
         <form onSubmit={handleSubmit}>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Kategori Adı</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Elektronik, Ofis Malzemeleri, vb."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500', color: '#4a5568' }}>Açıklama</label>
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Kategori açıklaması (opsiyonel)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Kategori Adı"
+            style={{ marginBottom: '1rem' }}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <input
+            type="text"
+            className="form-control"
+            placeholder="Açıklama"
+            style={{ marginBottom: '1.5rem' }}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
           <button type="submit" className="btn btn-primary" disabled={submitting}>
             {submitting ? '⏳ Ekleniyor...' : '✅ Kategori Ekle'}
           </button>
         </form>
       </div>
-
-      {error && <div className="alert alert-danger"><strong>❌ Hata:</strong> {error}</div>}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
+      {error && <div className="alert alert-danger">{error}</div>}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', marginTop: '2rem' }}>
         {categories.map((cat) => (
           <div key={cat.id} className="card">
             <div style={{ padding: '1.5rem' }}>
-              <h5 style={{ color: '#667eea', marginBottom: '0.5rem', fontSize: '1.1rem', fontWeight: '600' }}>📌 {cat.name}</h5>
-              <p style={{ color: '#718096', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: 0 }}>
-                {cat.description || 'Açıklama yok'}
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <h5 style={{ color: '#667eea', fontWeight: '600' }}>📌 {cat.name}</h5>
+                <div style={{ display: 'flex', gap: '0.5rem' }}>
+                  <button onClick={() => openEditModal(cat)} style={{ border: 'none', background: 'none', color: '#4c51bf', cursor: 'pointer', fontSize: '1.1rem' }}><FaEdit /></button>
+                  <button onClick={() => handleDelete(cat.id)} style={{ border: 'none', background: 'none', color: '#e53e3e', cursor: 'pointer', fontSize: '1.1rem' }}><FaTrash /></button>
+                </div>
+              </div>
+              <p style={{ color: '#718096', fontSize: '0.9rem', marginTop: '0.5rem' }}>{cat.description || 'Açıklama yok'}</p>
             </div>
           </div>
         ))}
       </div>
+      {editCat && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }}>
+          <div className="card" style={{ width: '400px', padding: '2rem' }}>
+            <h3 style={{ color: '#667eea', marginBottom: '1.5rem' }}>Kategoriyi Düzenle</h3>
+            <input 
+              type="text" 
+              className="form-control" 
+              value={editName} 
+              onChange={(e) => setEditName(e.target.value)} 
+              style={{ marginBottom: '1rem' }}
+            />
+            <textarea 
+              className="form-control" 
+              value={editDescription} 
+              onChange={(e) => setEditDescription(e.target.value)} 
+              style={{ marginBottom: '1.5rem', height: '100px' }}
+            />
+            <div style={{ display: 'flex', gap: '1rem' }}>
+              <button onClick={handleEditSave} className="btn btn-primary" style={{ flex: 1 }}><FaCheck /> Kaydet</button>
+              <button onClick={() => setEditCat(null)} className="btn btn-secondary" style={{ flex: 1, backgroundColor: '#a0aec0' }}><FaTimes /> İptal</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
