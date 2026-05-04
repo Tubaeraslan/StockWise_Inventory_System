@@ -36,29 +36,6 @@ export default function Dashboard({ user, onLogout }) {
     }, [rankingMonth, isAdmin, activeTab]);
 
   // Şifreyle erişim isteyen örnek fonksiyon
-  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
-  const [staffPassword, setStaffPassword] = useState('');
-  const [accessGranted, setAccessGranted] = useState(false);
-  const [accessError, setAccessError] = useState('');
-
-  const handleRestrictedAccess = () => {
-    setShowPasswordPrompt(true);
-    setAccessGranted(false);
-    setAccessError('');
-  };
-
-  const checkStaffPassword = async (e) => {
-    e.preventDefault();
-    // Burada gerçek backend doğrulaması yapılmalı
-    if (staffPassword === 'staff123') {
-      setAccessGranted(true);
-      setShowPasswordPrompt(false);
-      setAccessError('');
-    } else {
-      setAccessError('Şifre yanlış!');
-    }
-  };
-
   useEffect(() => {
     const fetchStats = async () => {
       try {

@@ -21,7 +21,7 @@ export default function Register({ onRegister, onGoToLogin }) {
     }
     setLoading(true);
     try {
-      const res = await axios.post('http://localhost:8080/api/users', { username, password, permission });
+      await axios.post('http://localhost:8080/api/users', { username, password, permission });
       onRegister && onRegister();
     } catch (err) {
       setError(err.response?.data?.error || 'Kayıt başarısız!');

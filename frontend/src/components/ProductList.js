@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
-import { useProducts } from '../hooks/useProducts';
-import ProductForm from './ProductForm';
-import BarcodeSell from './BarcodeSell';
-import ProductTable from './ProductTable';
+import React, { useState, useEffect } from 'react';
+import { getCategories, getProducts, createProduct, sellByBarcode, sellProduct } from '../services/api';
 
 export default function ProductList({ isAdmin, user }) {
     const [sellAmounts, setSellAmounts] = useState({});
