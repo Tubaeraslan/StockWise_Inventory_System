@@ -14,17 +14,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProductService {
     private final com.stockwise.backend.alert.AlertService alertService;
+    private final com.stockwise.backend.alert.AlertRepository alertRepository;
     private final ProductRepository productRepository;
     private final CategoryService categoryService;
     private final UserService userService;
     private final SaleRepository saleRepository;
     private final com.stockwise.backend.user.UserActivityLogService userActivityLogService;
 
-    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService, com.stockwise.backend.alert.AlertService alertService, SaleRepository saleRepository, com.stockwise.backend.user.UserActivityLogService userActivityLogService) {
+    public ProductService(ProductRepository productRepository, CategoryService categoryService, UserService userService, com.stockwise.backend.alert.AlertService alertService, com.stockwise.backend.alert.AlertRepository alertRepository, SaleRepository saleRepository, com.stockwise.backend.user.UserActivityLogService userActivityLogService) {
         this.productRepository = productRepository;
         this.categoryService = categoryService;
         this.userService = userService;
         this.alertService = alertService;
+        this.alertRepository = alertRepository;
         this.saleRepository = saleRepository;
         this.userActivityLogService = userActivityLogService;
     }
@@ -71,6 +73,22 @@ public class ProductService {
         return toResponse(saved);
     }
 
+    @Transactional
+    public ProductResponse addStock(Long productId, int amount, Long userId) {
+        if (amount <= 0) throw new IllegalArgumentException("Eklenen stok miktarı pozitif olmalı");
+
+        StockUser user = userService.getEntity(userId);
+        if (user.getPermission() == null || !"ADMIN".equalsIgnoreCase(user.getPermission())) {
+            throw new IllegalArgumentException("Bu işlem için yalnızca admin yetkisi gerekli");
+        }
+
+        Product product = getEntity(productId);
+        product.setQuantity(product.getQuantity() + amount);
+        Product saved = productRepository.save(product);
+        userActivityLogService.log(userId, "PRODUCT_STOCK_ADD: " + saved.getName() + " +" + amount);
+        return toResponse(saved);
+    }
+
     // Diğer constructor kaldırıldı, yukarıdaki constructor kullanılacak
 
     @Transactional(readOnly = true)
@@ -110,6 +128,7 @@ public class ProductService {
     @Transactional
     public void delete(Long id, Long userId) {
         Product product = getEntity(id);
+        alertRepository.findByProductId(id).ifPresent(alertRepository::delete);
         productRepository.delete(product);
         userActivityLogService.log(userId, "PRODUCT_DELETE: " + product.getName());
     }

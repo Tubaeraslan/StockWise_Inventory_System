@@ -5,7 +5,8 @@ import Dashboard from './components/Dashboard';
 import ProductList from './components/ProductList';
 import CategoryList from './components/CategoryList';
 import AddProduct from './components/AddProduct';
-import { FaChartLine, FaBox, FaThLarge, FaPlusCircle, FaSignOutAlt } from 'react-icons/fa';
+import StockUpdate from './components/StockUpdate';
+import { FaChartLine, FaBox, FaThLarge, FaPlusCircle, FaSignOutAlt, FaWarehouse } from 'react-icons/fa';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -36,6 +37,7 @@ function App() {
       case 'products': return <ProductList isAdmin={isAdmin} user={user} />;
       case 'categories': return <CategoryList user={user} />;
       case 'add-product': return isAdmin ? <AddProduct user={user} /> : <Dashboard user={user} />;
+      case 'stock-update': return isAdmin ? <StockUpdate user={user} isAdmin={isAdmin} /> : <Dashboard user={user} />;
       default: return <Dashboard user={user} />;
     }
   };
@@ -68,6 +70,11 @@ function App() {
           {isAdmin && (
             <button onClick={() => setActivePage('add-product')} style={activePage === 'add-product' ? styles.activeLink : styles.link}>
               <FaPlusCircle /> Yeni Ürün Ekle
+            </button>
+          )}
+          {isAdmin && (
+            <button onClick={() => setActivePage('stock-update')} style={activePage === 'stock-update' ? styles.activeLink : styles.link}>
+              <FaWarehouse /> Stok Güncelle
             </button>
           )}
         </nav>

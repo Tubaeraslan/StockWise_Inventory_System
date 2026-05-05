@@ -30,6 +30,11 @@ public class ProductController {
         public Long userId;
     }
 
+    public static class StockUpdateRequest {
+        public Integer amount;
+        public Long userId;
+    }
+
     @PostMapping("/sell")
     public ProductResponse sellProduct(@RequestBody SellRequest request) {
         if (request.productId == null || request.amount == null || request.userId == null) {
@@ -44,6 +49,14 @@ public class ProductController {
             throw new IllegalArgumentException("Barkod, miktar ve kullanıcı zorunlu");
         }
         return productService.sellByBarcode(request.barcode.trim(), request.amount, request.userId);
+    }
+
+    @PostMapping("/{id}/stock")
+    public ProductResponse addStock(@PathVariable Long id, @RequestBody StockUpdateRequest request) {
+        if (request.amount == null || request.userId == null) {
+            throw new IllegalArgumentException("Stok miktarı ve kullanıcı zorunlu");
+        }
+        return productService.addStock(id, request.amount, request.userId);
     }
 
     private final ProductService productService;

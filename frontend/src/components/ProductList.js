@@ -8,6 +8,7 @@ export default function ProductList({ isAdmin, user }) {
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
+  const [barcodeAmount, setBarcodeAmount] = useState(1);
   const [sellAmounts, setSellAmounts] = useState({});
 
   useEffect(() => { fetchData(); }, []);
@@ -22,9 +23,12 @@ export default function ProductList({ isAdmin, user }) {
   const handleBarcodeSell = async (e) => {
     e.preventDefault();
     if (barcodeInput.length !== 8) return alert("Barkod 8 hane olmalı!");
+    const amount = parseInt(barcodeAmount, 10);
+    if (!amount || amount <= 0) return alert("Satış miktarı 1 veya daha büyük olmalı!");
     try {
-      await sellByBarcode(barcodeInput, 1, user.id);
+      await sellByBarcode(barcodeInput, amount, user.id);
       setBarcodeInput('');
+      setBarcodeAmount(1);
       fetchData();
       alert("Satış başarılı!");
     } catch (err) { alert("Hata: Stok yetersiz veya barkod hatalı!"); }
@@ -67,13 +71,21 @@ export default function ProductList({ isAdmin, user }) {
 
       {/* BARKODLA SATIŞ ALANI - GERİ GELDİ */}
       <div style={styles.barcodeSection}>
-        <form onSubmit={handleBarcodeSell} style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+        <form onSubmit={handleBarcodeSell} style={{display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap'}}>
           <FaBarcode size={24} color="#6366f1" />
           <input 
             style={styles.input} 
             placeholder="Hızlı Satış için Barkod Okut..." 
             value={barcodeInput}
             onChange={(e) => setBarcodeInput(e.target.value.replace(/\D/g, '').slice(0,8))}
+          />
+          <input
+            type="number"
+            min="1"
+            style={{...styles.input, maxWidth: '120px'}}
+            placeholder="Adet"
+            value={barcodeAmount}
+            onChange={(e) => setBarcodeAmount(e.target.value)}
           />
           <button type="submit" style={styles.sellBtn}>Hızlı Sat</button>
         </form>

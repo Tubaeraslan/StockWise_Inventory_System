@@ -21,6 +21,7 @@ export const createProduct = (product) => api.post(`/api/products?userId=${produ
 export const deleteProduct = (id, userId) => api.delete(`/api/products/${id}?userId=${userId}`);
 export const sellProduct = (productId, amount, userId) => api.post('/api/products/sell', { productId, amount, userId });
 export const sellByBarcode = (barcode, amount, userId) => api.post('/api/products/sell-by-barcode', { barcode, amount, userId });
+export const addStock = (productId, amount, userId) => api.post(`/api/products/${productId}/stock`, { amount, userId });
 
 // Kategori İşlemleri (userId URL'ye ekleniyor)
 export const createCategory = (category) => api.post(`/api/categories?userId=${category.userId}`, category);
