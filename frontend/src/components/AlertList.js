@@ -1,84 +1,52 @@
 import React, { useEffect, useState } from 'react';
 import { getAlerts } from '../services/api';
+import { FaExclamationCircle, FaCheckCircle, FaHistory } from 'react-icons/fa';
 
 export default function AlertList() {
   const [alerts, setAlerts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchAlerts = async () => {
-      try {
-        const response = await getAlerts();
-        setAlerts(response.data);
-        setError(null);
-      } catch (err) {
-        setError('Uyarılar yüklenemedi: ' + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAlerts();
-    const interval = setInterval(fetchAlerts, 5000);
-    return () => clearInterval(interval);
+    getAlerts().then(res => setAlerts(res.data));
   }, []);
 
-  if (loading) {
-    return (
-      <div className="container" style={{ textAlign: 'center', paddingTop: '3rem' }}>
-        <div style={{ fontSize: '1.2rem', color: '#718096' }}>⏳ Yükleniyor...</div>
-      </div>
-    );
-  }
-
-  if (alerts.length === 0) {
-    return (
-      <div className="container">
-        <h1 style={{ marginBottom: '2rem', color: '#667eea', fontSize: '2rem', fontWeight: 'bold' }}>🔔 Stok Uyarıları</h1>
-        <div className="alert alert-success">
-          <strong>✅ Harika!</strong> Ürünlerin hepsi yeterli stok seviyesinde. Ürün ekle veya miktarları düşürerek uyarıları görünteleyebilirsin.
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container">
-      <h1 style={{ marginBottom: '2rem', color: '#f56565', fontSize: '2rem', fontWeight: 'bold' }}>🔔 Stok Uyarıları ({alerts.length})</h1>
-      
-      {error && <div className="alert alert-danger"><strong>❌ Hata:</strong> {error}</div>}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.5rem' }}>
-        {alerts.map((alert) => (
-          <div key={alert.productId} className="card" style={{ borderLeft: '4px solid #f56565' }}>
-            <div style={{ padding: '1.5rem' }}>
-              <h5 style={{ color: '#f56565', marginBottom: '1rem', fontSize: '1.1rem', fontWeight: '600' }}>
-                ⚠️ {alert.productName}
-              </h5>
-              <div style={{ color: '#718096', fontSize: '0.95rem', lineHeight: '1.8' }}>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>Kategori:</strong> {alert.categoryName}
-                </div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>Mevcut Stok:</strong> <span style={{ color: '#f56565', fontWeight: 'bold' }}>{alert.quantity}</span>
-                </div>
-                <div style={{ marginBottom: '0.5rem' }}>
-                  <strong>Min. Eşik:</strong> {alert.threshold}
-                </div>
-                <div style={{ marginTop: '1rem', padding: '0.75rem', background: '#fff5f5', borderRadius: '6px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '0.85rem', color: '#718096' }}>Eksik Miktar</div>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#f56565' }}>-{alert.shortage}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
+    <div style={{ padding: '20px', fontFamily: '"Inter", sans-serif' }}>
+      <div style={{ marginBottom: '30px' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Uyarı Merkezi</h2>
+        <p style={{ color: '#64748b', fontSize: '14px' }}>Stok durumu kritik olan tüm ürünler burada listelenir.</p>
       </div>
 
-      <div style={{ marginTop: '2rem', padding: '1.5rem', background: '#edf2f7', borderRadius: '8px', borderLeft: '4px solid #667eea' }}>
-        <strong>💡 İpucu:</strong> Bu sayfada görünen ürünlerin stok miktarı minimum eşiğinin altındadır. Lütfen tedarikçiyle iletişime geçin veya yeni ürün siparişi verin.
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {alerts.length === 0 ? (
+          <div style={alertStyles.emptyState}>
+            <FaCheckCircle color="#22c55e" size={48} />
+            <h4>Harika!</h4>
+            <p>Şu an için kritik stok uyarısı bulunmuyor.</p>
+          </div>
+        ) : (
+          alerts.map(alert => (
+            <div key={alert.id} style={alertStyles.alertCard}>
+              <div style={alertStyles.iconBox}><FaExclamationCircle color="#ef4444" size={20} /></div>
+              <div style={{ flex: 1 }}>
+                <div style={alertStyles.productName}>{alert.productName}</div>
+                <div style={alertStyles.alertMsg}>{alert.message}</div>
+              </div>
+              <div style={alertStyles.statusBadge}>DÜŞÜK STOK</div>
+              <div style={alertStyles.timeBox}><FaHistory /> {new Date(alert.createdAt).toLocaleDateString()}</div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
+
+const alertStyles = {
+  alertCard: { display: 'flex', alignItems: 'center', background: '#fff', padding: '20px', borderRadius: '16px', border: '1px solid #fee2e2', gap: '20px', boxShadow: '0 4px 6px rgba(0,0,0,0.02)' },
+  iconBox: { padding: '12px', background: '#fef2f2', borderRadius: '12px' },
+  productName: { fontSize: '16px', fontWeight: '700', color: '#1e293b' },
+  alertMsg: { fontSize: '13px', color: '#64748b', marginTop: '2px' },
+  statusBadge: { padding: '4px 12px', background: '#fee2e2', color: '#991b1b', borderRadius: '20px', fontSize: '11px', fontWeight: '800' },
+  timeBox: { fontSize: '12px', color: '#94a3b8', display: 'flex', alignItems: 'center', gap: '5px' },
+  emptyState: { textAlign: 'center', padding: '60px', background: '#fff', borderRadius: '24px', border: '1px dashed #e2e8f0' }
+};

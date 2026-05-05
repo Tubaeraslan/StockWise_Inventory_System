@@ -1,275 +1,125 @@
 import React, { useEffect, useState } from 'react';
-import { getProducts, getCategories, createProduct, sellProduct, sellByBarcode } from '../services/api';
-import { FaBarcode } from 'react-icons/fa';
+import { getProducts, getCategories, sellProduct, sellByBarcode, deleteProduct } from '../services/api';
+import { FaBarcode, FaPrint, FaFileExcel, FaSearch, FaTrash } from 'react-icons/fa';
+import * as XLSX from 'xlsx';
 
 export default function ProductList({ isAdmin, user }) {
-  const [sellAmounts, setSellAmounts] = useState({});
-  const [selling, setSelling] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    quantity: '',
-    threshold: '',
-    price: '',
-    categoryId: ''
-  });
-  const [barcode, setBarcode] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
-  const [barcodeAmount, setBarcodeAmount] = useState(1);
-  const [barcodeSubmitting, setBarcodeSubmitting] = useState(false);
+  const [sellAmounts, setSellAmounts] = useState({});
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = () => {
-    Promise.all([getProducts(), getCategories()])
-      .then(([prodRes, catRes]) => {
-        setProducts(prodRes.data);
-        setCategories(catRes.data);
-        setLoading(false);
-      })
-      .catch(err => {
-        setError('Veri yüklenemedi: ' + err.message);
-        setLoading(false);
-      });
+    Promise.all([getProducts(), getCategories()]).then(([prodRes, catRes]) => {
+      setProducts(prodRes.data);
+      setCategories(catRes.data);
+    });
   };
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
+  const handleBarcodeSell = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.quantity || !formData.threshold || !formData.price || !formData.categoryId) {
-      alert('Tüm alanlar gerekli');
-      return;
-    }
-    if (barcode.length !== 8) {
-      alert('Barkod tam 8 rakam olmalıdır!');
-      return;
-    }
+    if (barcodeInput.length !== 8) return alert("Barkod 8 hane olmalı!");
     try {
-      setSubmitting(true);
-      await createProduct({
-        name: formData.name,
-        quantity: parseInt(formData.quantity),
-        threshold: parseInt(formData.threshold),
-        price: parseFloat(formData.price),
-        categoryId: parseInt(formData.categoryId),
-        barcode: barcode,
-        userId: user && user.id
-      });
-      setFormData({
-        name: '',
-        quantity: '',
-        threshold: '',
-        price: '',
-        categoryId: ''
-      });
-      setBarcode('');
-      const res = await getProducts();
-      setProducts(res.data);
-    } catch (err) {
-      alert('Hata: ' + err.message);
-    } finally {
-      setSubmitting(false);
-    }
+      await sellByBarcode(barcodeInput, 1, user.id);
+      setBarcodeInput('');
+      fetchData();
+      alert("Satış başarılı!");
+    } catch (err) { alert("Hata: Stok yetersiz veya barkod hatalı!"); }
   };
 
   const handleSell = async (productId) => {
     const amount = parseInt(sellAmounts[productId] || 1);
     try {
-      setSelling(prev => ({ ...prev, [productId]: true }));
       await sellProduct(productId, amount, user.id);
-      const res = await getProducts();
-      setProducts(res.data);
-      setSellAmounts(prev => ({ ...prev, [productId]: '' }));
-    } catch (err) {
-      alert('Satış hatası: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setSelling(prev => ({ ...prev, [productId]: false }));
+      fetchData();
+    } catch (err) { alert("Hata: Stok yetersiz veya yetki hatası!"); }
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm("Ürünü silmek istediğine emin misin?")) {
+      await deleteProduct(id);
+      fetchData();
     }
   };
 
-  const handleBarcodeSell = async (e) => {
-    e.preventDefault();
-    if (!barcodeInput) return;
-    try {
-      setBarcodeSubmitting(true);
-      await sellByBarcode(barcodeInput, barcodeAmount, user.id);
-      const res = await getProducts();
-      setProducts(res.data);
-      setBarcodeInput('');
-      setBarcodeAmount(1);
-    } catch (err) {
-      alert('Barkod satış hatası: ' + (err.response?.data?.message || err.message));
-    } finally {
-      setBarcodeSubmitting(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="container" style={{ textAlign: 'center', paddingTop: '3rem' }}>
-        <div style={{ fontSize: '1.2rem', color: '#718096' }}>⏳ Yükleniyor...</div>
-      </div>
-    );
-  }
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase()) || p.barcode.includes(searchTerm)
+  );
 
   return (
-    <div className="container">
-      <h1 style={{ marginBottom: '2rem', color: '#667eea', fontSize: '2rem', fontWeight: 'bold' }}>
-        📦 Ürünler
-      </h1>
-
-      {isAdmin && (
-        <div className="form-section">
-          <h3>Yeni Ürün Ekle / Stok Yenile</h3>
-          <form onSubmit={handleSubmit}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '1rem',
-              marginBottom: '1.5rem'
-            }}>
-              <input type="text" name="name" placeholder="Ürün adı"
-                value={formData.name} onChange={handleChange} required />
-              
-              <select name="categoryId"
-                value={formData.categoryId}
-                onChange={handleChange} required>
-                <option value="">Kategori Seç</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
-
-              <input type="number" name="quantity"
-                placeholder="Miktar"
-                value={formData.quantity}
-                onChange={handleChange} required />
-
-              <input type="number" name="threshold"
-                placeholder="Minimum stok"
-                value={formData.threshold}
-                onChange={handleChange} required />
-
-              <input type="number" step="0.01" name="price"
-                placeholder="Fiyat"
-                value={formData.price}
-                onChange={handleChange} required />
-
-              <input
-                type="text"
-                placeholder="Barkod (8 Rakam)"
-                value={barcode}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9]/g, '');
-                  if (val.length <= 8) setBarcode(val);
-                }}
-                required
-                style={{ border: barcode.length === 8 ? '2px solid #48bb78' : '1px solid #cbd5e0' }}
-              />
-            </div>
-            <button type="submit" className="btn btn-primary" disabled={submitting}>
-              {submitting ? '⏳ Ekleniyor...' : '✅ Ürün Ekle'}
-            </button>
-          </form>
+    <div style={{padding: '30px', background: '#f8fafc', minHeight: '100vh'}}>
+      <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '20px'}}>
+        <h2 style={{fontWeight: '800'}}>Ürün ve Stok Yönetimi</h2>
+        <div style={{display: 'flex', gap: '10px'}}>
+          <div style={styles.searchBox}>
+            <FaSearch color="#94a3b8" />
+            <input style={styles.searchInput} placeholder="Ara..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          </div>
         </div>
-      )}
+      </div>
 
-      {error && <div className="alert alert-danger">❌ {error}</div>}
-
-      <div className="form-section" style={{ marginTop: '2rem', background: '#ebf4ff' }}>
-        <form onSubmit={handleBarcodeSell} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+      {/* BARKODLA SATIŞ ALANI - GERİ GELDİ */}
+      <div style={styles.barcodeSection}>
+        <form onSubmit={handleBarcodeSell} style={{display: 'flex', gap: '15px', alignItems: 'center'}}>
+          <FaBarcode size={24} color="#6366f1" />
           <input 
-            type="text" 
-            placeholder="Barkod okut (veya gir)" 
-            value={barcodeInput} 
-            onChange={(e) => setBarcodeInput(e.target.value)}
-            style={{ flex: 2 }}
+            style={styles.input} 
+            placeholder="Hızlı Satış için Barkod Okut..." 
+            value={barcodeInput}
+            onChange={(e) => setBarcodeInput(e.target.value.replace(/\D/g, '').slice(0,8))}
           />
-          <input 
-            type="number" 
-            value={barcodeAmount} 
-            onChange={(e) => setBarcodeAmount(e.target.value)}
-            min="1"
-            style={{ flex: 1 }}
-          />
-          <button type="submit" className="btn btn-success" disabled={barcodeSubmitting}>
-            {barcodeSubmitting ? '...' : 'Satış (Barkod)'}
-          </button>
+          <button type="submit" style={styles.sellBtn}>Hızlı Sat</button>
         </form>
       </div>
 
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: '#fff',
-        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-        borderRadius: 8,
-        overflow: 'hidden',
-        marginTop: 24
-      }}>
-        <thead style={{ background: '#f6f8fa' }}>
-          <tr>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Ürün</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Barkod</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Kategori</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Miktar</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Eşik</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Fiyat</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Durum</th>
-            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'center' }}>Satış</th>
-          </tr>
-        </thead>
-        <tbody>
-          {products.map(prod => (
-            <tr key={prod.id} style={{ borderBottom: '1px solid #e2e8f0', background: prod.quantity <= prod.threshold ? '#fff5f5' : 'inherit' }}>
-              <td style={{ padding: '10px 8px', fontWeight: 500 }}>{prod.name}</td>
-              <td style={{ padding: '10px 8px', color: '#4c51bf', fontWeight: '500', fontSize: '0.9rem' }}>
-                <FaBarcode style={{ marginRight: '5px' }} />
-                {prod.barcode || '---'}
-              </td>
-              <td style={{ padding: '10px 8px' }}>{prod.category?.name || prod.categoryName}</td>
-              <td style={{ padding: '10px 8px', textAlign: 'right' }}>{prod.quantity}</td>
-              <td style={{ padding: '10px 8px', textAlign: 'right' }}>{prod.threshold}</td>
-              <td style={{ padding: '10px 8px', textAlign: 'right' }}>₺{prod.price?.toFixed(2)}</td>
-              <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                {prod.quantity <= prod.threshold ? (
-                  <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>⚠️ Düşük</span>
-                ) : (
-                  <span style={{ color: '#38a169', fontWeight: 'bold' }}>✅ Normal</span>
-                )}
-              </td>
-              <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
-                  <input 
-                    type="number" 
-                    style={{ width: '50px' }} 
-                    value={sellAmounts[prod.id] || ''} 
-                    onChange={(e) => setSellAmounts({...sellAmounts, [prod.id]: e.target.value})}
-                    placeholder="1"
-                  />
-                  <button 
-                    className="btn btn-sm btn-primary"
-                    onClick={() => handleSell(prod.id)}
-                    disabled={selling[prod.id]}
-                  >
-                    {selling[prod.id] ? '...' : 'Sat'}
-                  </button>
-                </div>
-              </td>
+      <div style={styles.tableCard}>
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th>Barkod</th>
+              <th>Ürün Adı</th>
+              <th>Kategori</th>
+              <th>Fiyat</th>
+              <th>Eşik</th>
+              <th>Stok</th>
+              <th style={{textAlign: 'center'}}>İşlemler</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredProducts.map(prod => (
+              <tr key={prod.id} style={styles.tr}>
+                <td style={{color: '#6366f1', fontWeight: 'bold'}}>{prod.barcode}</td>
+                <td>{prod.name}</td>
+                <td>{prod.category?.name || '---'}</td>
+                <td>₺{prod.price?.toFixed(2)}</td>
+                <td>{prod.threshold}</td>
+                <td style={{fontWeight: 'bold', color: prod.quantity <= prod.threshold ? 'red' : 'inherit'}}>{prod.quantity}</td>
+                <td style={{display: 'flex', gap: '5px', justifyContent: 'center'}}>
+                  <input type="number" style={styles.miniInput} defaultValue="1" onChange={(e) => setSellAmounts({...sellAmounts, [prod.id]: e.target.value})} />
+                  <button onClick={() => handleSell(prod.id)} style={styles.actionBtn}>Sat</button>
+                  {isAdmin && <button onClick={() => handleDelete(prod.id)} style={{...styles.actionBtn, background: '#ef4444'}}><FaTrash /></button>}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
+
+const styles = {
+  searchBox: { background: '#fff', padding: '8px 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid #e2e8f0' },
+  searchInput: { border: 'none', outline: 'none', fontSize: '14px' },
+  barcodeSection: { background: '#fff', padding: '20px', borderRadius: '15px', marginBottom: '20px', border: '1px solid #eef2ff' },
+  input: { padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', flex: 1 },
+  sellBtn: { background: '#6366f1', color: '#fff', border: 'none', padding: '10px 20px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' },
+  tableCard: { background: '#fff', borderRadius: '15px', overflow: 'hidden', border: '1px solid #f1f5f9' },
+  table: { width: '100%', borderCollapse: 'collapse', fontSize: '14px' },
+  tr: { borderBottom: '1px solid #f8fafc' },
+  miniInput: { width: '40px', textAlign: 'center', borderRadius: '4px', border: '1px solid #ccc' },
+  actionBtn: { background: '#6366f1', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer' }
+};
