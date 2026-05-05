@@ -40,8 +40,12 @@ export default function ProductList({ isAdmin, user }) {
 
   const handleDelete = async (id) => {
     if (window.confirm("Ürünü silmek istediğine emin misin?")) {
-      await deleteProduct(id);
-      fetchData();
+      try {
+        await deleteProduct(id, user.id);
+        fetchData();
+      } catch (err) {
+        alert('Ürün silinemedi!');
+      }
     }
   };
 
@@ -93,7 +97,7 @@ export default function ProductList({ isAdmin, user }) {
               <tr key={prod.id} style={styles.tr}>
                 <td style={{color: '#6366f1', fontWeight: 'bold'}}>{prod.barcode}</td>
                 <td>{prod.name}</td>
-                <td>{prod.category?.name || '---'}</td>
+                <td>{prod.categoryName || '---'}</td>
                 <td>₺{prod.price?.toFixed(2)}</td>
                 <td>{prod.threshold}</td>
                 <td style={{fontWeight: 'bold', color: prod.quantity <= prod.threshold ? 'red' : 'inherit'}}>{prod.quantity}</td>

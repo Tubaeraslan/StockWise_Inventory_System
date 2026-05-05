@@ -13,12 +13,7 @@ function App() {
   const [activePage, setActivePage] = useState('dashboard');
 
   const handleLogin = (userData) => {
-    // Tuba admin yetkisi ve ID kontrolü
-    const updatedUser = { ...userData };
-    if (updatedUser.username.toLowerCase() === 'tuba') {
-      updatedUser.permission = 'ADMIN';
-    }
-    setUser(updatedUser);
+    setUser(userData);
   };
 
   const handleLogout = () => {

@@ -1,12 +1,24 @@
 import React, { useState } from 'react';
 import { FaUserPlus, FaUser, FaLock, FaArrowLeft } from 'react-icons/fa';
+import { register } from '../services/api';
 
 export default function Register({ onRegister, onGoToLogin }) {
-  const [formData, setFormData] = useState({ username: '', password: '', role: 'STAFF' });
+  const [formData, setFormData] = useState({ username: '', password: '', permission: 'STAFF' });
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onRegister(formData);
+    setError('');
+    setLoading(true);
+    try {
+      const response = await register(formData.username, formData.password, formData.permission);
+      setLoading(false);
+      onRegister(response.data);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Kayıt başarısız oldu');
+      setLoading(false);
+    }
   };
 
   return (
@@ -17,6 +29,8 @@ export default function Register({ onRegister, onGoToLogin }) {
         </div>
         <h2 style={authStyles.title}>Yeni Hesap Oluştur</h2>
         <p style={authStyles.subtitle}>Ekibinize yeni bir üye ekleyin.</p>
+
+        {error && <div style={{...authStyles.error}}>{error}</div>}
 
         <form onSubmit={handleSubmit} style={authStyles.form}>
           <div style={authStyles.inputWrapper}>
@@ -40,13 +54,13 @@ export default function Register({ onRegister, onGoToLogin }) {
           </div>
           <select 
             style={{...authStyles.input, paddingLeft: '16px'}} 
-            onChange={e => setFormData({...formData, role: e.target.value})}
+            onChange={e => setFormData({...formData, permission: e.target.value})}
           >
             <option value="STAFF">Personel Yetkisi</option>
             <option value="ADMIN">Yönetici Yetkisi</option>
           </select>
-          <button type="submit" style={authStyles.submitBtn}>
-            Kayıt Ol <FaUserPlus />
+          <button type="submit" style={authStyles.submitBtn} disabled={loading}>
+            {loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'} <FaUserPlus />
           </button>
         </form>
 
@@ -64,6 +78,7 @@ const authStyles = {
     card: { background: '#fff', padding: '48px', borderRadius: '24px', width: '100%', maxWidth: '400px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)', textAlign: 'center' },
     title: { fontSize: '24px', fontWeight: '800', color: '#1e293b', marginBottom: '8px' },
     subtitle: { color: '#64748b', fontSize: '14px', marginBottom: '32px' },
+    error: { background: '#fee2e2', border: '1px solid #fecaca', color: '#dc2626', padding: '12px', borderRadius: '8px', fontSize: '14px', marginBottom: '16px' },
     form: { display: 'flex', flexDirection: 'column', gap: '16px' },
     inputWrapper: { position: 'relative', display: 'flex', alignItems: 'center' },
     icon: { position: 'absolute', left: '16px', color: '#94a3b8' },
