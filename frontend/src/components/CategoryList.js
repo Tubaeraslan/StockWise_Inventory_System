@@ -41,33 +41,27 @@ export default function CategoryList({ user }) {
   const handleEditSave = async () => {
     try {
       if (!editCat || !user?.id) return;
-      
       await apiUpdateCategory(
         editCat.id, 
         { name: editName, description: editDescription }, 
         user.id
       );
-      
       setEditCat(null);
       fetchCategories();
     } catch (err) {
-      alert("Güncelleme hatası: " + (err.response?.data?.message || "userId parametresi eksik veya geçersiz."));
+      alert("Güncelleme hatası: " + (err.response?.data?.message || err.message));
     }
   };
 
   const handleDelete = async (id) => {
     if (!id || !user?.id) return;
-    if (window.confirm("Bu kategoriyi silmek istediğinize emin misiniz?")) {
+    if (window.confirm("Bu kategoriyi silmek istediğinize emin misiniz? (İçindeki ürünler, onlara bağlı satışlar ve uyarılar da silinecektir)")) {
       try {
         await apiDeleteCategory(id, user.id);
         fetchCategories();
       } catch (err) {
-        const msg = err.response?.data?.message || "";
-        if (msg.includes("foreign key") || err.message.includes("400")) {
-          alert("Silme hatası: Bu kategoriye bağlı ürünler var. Önce ürünleri silmeli veya başka kategoriye taşımalısın.");
-        } else {
-          alert("Silme hatası: " + (msg || err.message));
-        }
+        console.error("Silme hatası detayı:", err.response?.data);
+        alert("Silme hatası: " + (err.response?.data?.message || err.message));
       }
     }
   };

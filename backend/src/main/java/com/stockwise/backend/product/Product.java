@@ -3,13 +3,9 @@ package com.stockwise.backend.product;
 import com.stockwise.backend.category.Category;
 import com.stockwise.backend.common.BaseEntity;
 import com.stockwise.backend.user.StockUser;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Entity
 @Table(name = "products")
@@ -34,6 +30,12 @@ public class Product extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
     private StockUser manager;
+
+    @Column(unique = true, length = 64)
+    private String barcode;
+
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Sale> sales;
 
     public String getName() {
         return name;
@@ -83,14 +85,22 @@ public class Product extends BaseEntity {
         this.manager = manager;
     }
 
-    @Column(unique = true, length = 64)
-    private String barcode;
-
     public String getBarcode() {
         return barcode;
     }
 
     public void setBarcode(String barcode) {
+        if (barcode == null || !barcode.matches("^\\d{8}$")) {
+            throw new IllegalArgumentException("Barkod sadece 8 haneli rakamlardan oluşmalıdır.");
+        }
         this.barcode = barcode;
+    }
+
+    public List<Sale> getSales() {
+        return sales;
+    }
+
+    public void setSales(List<Sale> sales) {
+        this.sales = sales;
     }
 }

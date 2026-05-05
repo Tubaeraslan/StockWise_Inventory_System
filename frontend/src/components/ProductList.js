@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { getProducts, getCategories, createProduct, sellProduct, sellByBarcode } from '../services/api';
+import { FaBarcode } from 'react-icons/fa';
 
 export default function ProductList({ isAdmin, user }) {
-    const [sellAmounts, setSellAmounts] = useState({});
-    const [selling, setSelling] = useState({});
+  const [sellAmounts, setSellAmounts] = useState({});
+  const [selling, setSelling] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -16,11 +17,16 @@ export default function ProductList({ isAdmin, user }) {
     price: '',
     categoryId: ''
   });
+  const [barcode, setBarcode] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
   const [barcodeAmount, setBarcodeAmount] = useState(1);
   const [barcodeSubmitting, setBarcodeSubmitting] = useState(false);
 
   useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = () => {
     Promise.all([getProducts(), getCategories()])
       .then(([prodRes, catRes]) => {
         setProducts(prodRes.data);
@@ -31,7 +37,7 @@ export default function ProductList({ isAdmin, user }) {
         setError('Veri yüklenemedi: ' + err.message);
         setLoading(false);
       });
-  }, []);
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -40,24 +46,25 @@ export default function ProductList({ isAdmin, user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!formData.name || !formData.quantity || !formData.threshold || !formData.price || !formData.categoryId) {
       alert('Tüm alanlar gerekli');
       return;
     }
-
+    if (barcode.length !== 8) {
+      alert('Barkod tam 8 rakam olmalıdır!');
+      return;
+    }
     try {
       setSubmitting(true);
-
       await createProduct({
         name: formData.name,
         quantity: parseInt(formData.quantity),
         threshold: parseInt(formData.threshold),
         price: parseFloat(formData.price),
         categoryId: parseInt(formData.categoryId),
+        barcode: barcode,
         userId: user && user.id
       });
-
       setFormData({
         name: '',
         quantity: '',
@@ -65,10 +72,9 @@ export default function ProductList({ isAdmin, user }) {
         price: '',
         categoryId: ''
       });
-
+      setBarcode('');
       const res = await getProducts();
       setProducts(res.data);
-
     } catch (err) {
       alert('Hata: ' + err.message);
     } finally {
@@ -76,14 +82,27 @@ export default function ProductList({ isAdmin, user }) {
     }
   };
 
-  const handleBarcodeSubmit = async (e) => {
-    e && e.preventDefault && e.preventDefault();
-    if (!barcodeInput || !barcodeInput.trim()) return;
-    if (!user || !user.id) { alert('Kullanıcı bilgisi bulunamadı!'); return; }
-    const amount = parseInt(barcodeAmount, 10) || 1;
+  const handleSell = async (productId) => {
+    const amount = parseInt(sellAmounts[productId] || 1);
+    try {
+      setSelling(prev => ({ ...prev, [productId]: true }));
+      await sellProduct(productId, amount, user.id);
+      const res = await getProducts();
+      setProducts(res.data);
+      setSellAmounts(prev => ({ ...prev, [productId]: '' }));
+    } catch (err) {
+      alert('Satış hatası: ' + (err.response?.data?.message || err.message));
+    } finally {
+      setSelling(prev => ({ ...prev, [productId]: false }));
+    }
+  };
+
+  const handleBarcodeSell = async (e) => {
+    e.preventDefault();
+    if (!barcodeInput) return;
     try {
       setBarcodeSubmitting(true);
-      await sellByBarcode(barcodeInput.trim(), amount, user.id);
+      await sellByBarcode(barcodeInput, barcodeAmount, user.id);
       const res = await getProducts();
       setProducts(res.data);
       setBarcodeInput('');
@@ -112,18 +131,16 @@ export default function ProductList({ isAdmin, user }) {
       {isAdmin && (
         <div className="form-section">
           <h3>Yeni Ürün Ekle / Stok Yenile</h3>
-
           <form onSubmit={handleSubmit}>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
               gap: '1rem',
               marginBottom: '1.5rem'
             }}>
-
               <input type="text" name="name" placeholder="Ürün adı"
                 value={formData.name} onChange={handleChange} required />
-
+              
               <select name="categoryId"
                 value={formData.categoryId}
                 onChange={handleChange} required>
@@ -147,35 +164,48 @@ export default function ProductList({ isAdmin, user }) {
                 placeholder="Fiyat"
                 value={formData.price}
                 onChange={handleChange} required />
-            </div>
 
-            <button type="submit" disabled={submitting}>
+              <input
+                type="text"
+                placeholder="Barkod (8 Rakam)"
+                value={barcode}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, '');
+                  if (val.length <= 8) setBarcode(val);
+                }}
+                required
+                style={{ border: barcode.length === 8 ? '2px solid #48bb78' : '1px solid #cbd5e0' }}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary" disabled={submitting}>
               {submitting ? '⏳ Ekleniyor...' : '✅ Ürün Ekle'}
             </button>
           </form>
         </div>
       )}
 
-      {error && <div>❌ {error}</div>}
+      {error && <div className="alert alert-danger">❌ {error}</div>}
 
-      <div style={{ margin: '1rem 0', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-        <input
-          placeholder="Barkod okut (veya gir)"
-          value={barcodeInput}
-          onChange={e => setBarcodeInput(e.target.value)}
-          onKeyDown={e => { if (e.key === 'Enter') handleBarcodeSubmit(); }}
-          style={{ padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1', width: 220 }}
-        />
-        <input
-          type="number"
-          min="1"
-          value={barcodeAmount}
-          onChange={e => setBarcodeAmount(e.target.value)}
-          style={{ width: 80, padding: '8px', borderRadius: 6, border: '1px solid #cbd5e1' }}
-        />
-        <button onClick={handleBarcodeSubmit} disabled={barcodeSubmitting} style={{ background: '#48bb78', color: '#fff', border: 'none', padding: '8px 12px', borderRadius: 6 }}>
-          {barcodeSubmitting ? 'Satılıyor...' : 'Satış (Barkod)'}
-        </button>
+      <div className="form-section" style={{ marginTop: '2rem', background: '#ebf4ff' }}>
+        <form onSubmit={handleBarcodeSell} style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <input 
+            type="text" 
+            placeholder="Barkod okut (veya gir)" 
+            value={barcodeInput} 
+            onChange={(e) => setBarcodeInput(e.target.value)}
+            style={{ flex: 2 }}
+          />
+          <input 
+            type="number" 
+            value={barcodeAmount} 
+            onChange={(e) => setBarcodeAmount(e.target.value)}
+            min="1"
+            style={{ flex: 1 }}
+          />
+          <button type="submit" className="btn btn-success" disabled={barcodeSubmitting}>
+            {barcodeSubmitting ? '...' : 'Satış (Barkod)'}
+          </button>
+        </form>
       </div>
 
       <table style={{
@@ -190,6 +220,7 @@ export default function ProductList({ isAdmin, user }) {
         <thead style={{ background: '#f6f8fa' }}>
           <tr>
             <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Ürün</th>
+            <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Barkod</th>
             <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>Kategori</th>
             <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Miktar</th>
             <th style={{ padding: '12px 8px', borderBottom: '2px solid #e2e8f0', textAlign: 'right' }}>Eşik</th>
@@ -200,61 +231,40 @@ export default function ProductList({ isAdmin, user }) {
         </thead>
         <tbody>
           {products.map(prod => (
-            <tr key={prod.id} style={{ borderBottom: '1px solid #e2e8f0', background: prod.lowStock ? '#fff5f5' : 'inherit' }}>
+            <tr key={prod.id} style={{ borderBottom: '1px solid #e2e8f0', background: prod.quantity <= prod.threshold ? '#fff5f5' : 'inherit' }}>
               <td style={{ padding: '10px 8px', fontWeight: 500 }}>{prod.name}</td>
-              <td style={{ padding: '10px 8px' }}>{prod.categoryName}</td>
+              <td style={{ padding: '10px 8px', color: '#4c51bf', fontWeight: '500', fontSize: '0.9rem' }}>
+                <FaBarcode style={{ marginRight: '5px' }} />
+                {prod.barcode || '---'}
+              </td>
+              <td style={{ padding: '10px 8px' }}>{prod.category?.name || prod.categoryName}</td>
               <td style={{ padding: '10px 8px', textAlign: 'right' }}>{prod.quantity}</td>
               <td style={{ padding: '10px 8px', textAlign: 'right' }}>{prod.threshold}</td>
-              <td style={{ padding: '10px 8px', textAlign: 'right' }}>₺{prod.price.toFixed(2)}</td>
+              <td style={{ padding: '10px 8px', textAlign: 'right' }}>₺{prod.price?.toFixed(2)}</td>
               <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                {prod.lowStock ? <span style={{ color: '#e53e3e', fontWeight: 600 }}>⚠️ Düşük</span> : <span style={{ color: '#38a169', fontWeight: 600 }}>✅ Normal</span>}
+                {prod.quantity <= prod.threshold ? (
+                  <span style={{ color: '#e53e3e', fontWeight: 'bold' }}>⚠️ Düşük</span>
+                ) : (
+                  <span style={{ color: '#38a169', fontWeight: 'bold' }}>✅ Normal</span>
+                )}
               </td>
               <td style={{ padding: '10px 8px', textAlign: 'center' }}>
-                <input
-                  type="number"
-                  min="1"
-                  style={{ width: 60, marginRight: 8, border: '1px solid #cbd5e1', borderRadius: 4, padding: '4px 6px' }}
-                  value={sellAmounts[prod.id] || ''}
-                  onChange={e => setSellAmounts(a => ({ ...a, [prod.id]: e.target.value }))}
-                  disabled={selling[prod.id]}
-                />
-                <button
-                  onClick={async () => {
-                    const amount = parseInt(sellAmounts[prod.id], 10);
-                    if (!amount || amount <= 0) {
-                      alert('Geçerli bir miktar girin');
-                      return;
-                    }
-                    if (!user || !user.id) {
-                      alert('Kullanıcı bilgisi bulunamadı!');
-                      return;
-                    }
-                    setSelling(s => ({ ...s, [prod.id]: true }));
-                    try {
-                      await sellProduct(prod.id, amount, user.id);
-                      const res = await getProducts();
-                      setProducts(res.data);
-                      setSellAmounts(a => ({ ...a, [prod.id]: '' }));
-                    } catch (err) {
-                      alert('Satış hatası: ' + (err.response?.data?.message || err.message));
-                    } finally {
-                      setSelling(s => ({ ...s, [prod.id]: false }));
-                    }
-                  }}
-                  disabled={selling[prod.id]}
-                  style={{
-                    background: '#667eea',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: 4,
-                    padding: '6px 14px',
-                    fontWeight: 500,
-                    cursor: selling[prod.id] ? 'not-allowed' : 'pointer',
-                    transition: 'background 0.2s',
-                  }}
-                >
-                  {selling[prod.id] ? 'Satılıyor...' : 'Sat'}
-                </button>
+                <div style={{ display: 'flex', gap: '5px', justifyContent: 'center' }}>
+                  <input 
+                    type="number" 
+                    style={{ width: '50px' }} 
+                    value={sellAmounts[prod.id] || ''} 
+                    onChange={(e) => setSellAmounts({...sellAmounts, [prod.id]: e.target.value})}
+                    placeholder="1"
+                  />
+                  <button 
+                    className="btn btn-sm btn-primary"
+                    onClick={() => handleSell(prod.id)}
+                    disabled={selling[prod.id]}
+                  >
+                    {selling[prod.id] ? '...' : 'Sat'}
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

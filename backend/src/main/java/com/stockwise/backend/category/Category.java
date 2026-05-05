@@ -1,9 +1,9 @@
 package com.stockwise.backend.category;
 
 import com.stockwise.backend.common.BaseEntity;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import com.stockwise.backend.product.Product;
+import jakarta.persistence.*;
+import java.util.List;
 
 @Entity
 @Table(name = "categories")
@@ -14,6 +14,9 @@ public class Category extends BaseEntity {
 
     @Column(length = 255)
     private String description;
+
+    @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Product> products;
 
     public String getName() {
         return name;
@@ -29,5 +32,13 @@ public class Category extends BaseEntity {
 
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
     }
 }
