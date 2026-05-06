@@ -46,7 +46,7 @@ function App() {
     <div style={styles.appLayout}>
       <aside style={styles.sidebar}>
         <div style={styles.logo}>
-          <span style={{ color: '#6366f1' }}>Stock</span>Wise ⚛️
+          <span style={{ color: '#6366f1' }}>Stock</span>Wise
         </div>
 
         <div style={styles.userSection}>
