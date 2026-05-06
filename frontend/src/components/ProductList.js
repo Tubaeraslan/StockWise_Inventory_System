@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { getProducts, getCategories, sellProduct, sellByBarcode, deleteProduct } from '../services/api';
-import { FaBarcode, FaPrint, FaFileExcel, FaSearch, FaTrash, FaMoon, FaSun } from 'react-icons/fa';
+import { FaBarcode, FaPrint, FaFileExcel, FaSearch, FaTrash } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 
-export default function ProductList({ isAdmin, user }) {
+export default function ProductList({ isAdmin, user, darkMode }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [barcodeInput, setBarcodeInput] = useState('');
   const [barcodeAmount, setBarcodeAmount] = useState(1);
   const [sellAmounts, setSellAmounts] = useState({});
-  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -94,9 +93,6 @@ export default function ProductList({ isAdmin, user }) {
       <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'center'}}>
         <h2 style={{fontWeight: '800', color: textColor}}>Ürün ve Stok Yönetimi</h2>
         <div style={{display: 'flex', gap: '10px', alignItems: 'center'}}>
-          <button onClick={() => setDarkMode(!darkMode)} style={{...themeStyles.actionBtn, background: darkMode ? '#fbbf24' : '#18181b', color: darkMode ? '#18181b' : '#fff'}} title={darkMode ? 'Açık Mod' : 'Koyu Mod'}>
-            {darkMode ? <FaSun /> : <FaMoon />}
-          </button>
           <button onClick={handleExportExcel} style={{...themeStyles.actionBtn, background: '#22c55e'}}><FaFileExcel /> Excel'e Aktar</button>
           <button onClick={handlePrint} style={{...themeStyles.actionBtn, background: '#64748b'}}><FaPrint /> Yazdır</button>
           <div style={themeStyles.searchBox}>

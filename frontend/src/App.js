@@ -49,13 +49,15 @@ function App() {
   const renderPage = () => {
     switch (activePage) {
       case 'dashboard': return <Dashboard user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
-      case 'products': return <ProductList isAdmin={isAdmin} user={user} />;
-      case 'categories': return <CategoryList user={user} />;
-      case 'add-product': return isAdmin ? <AddProduct user={user} /> : <Dashboard user={user} />;
-      case 'stock-update': return isAdmin ? <StockUpdate user={user} isAdmin={isAdmin} /> : <Dashboard user={user} />;
-      default: return <Dashboard user={user} />;
+      case 'products': return <ProductList isAdmin={isAdmin} user={user} darkMode={darkMode} />;
+      case 'categories': return <CategoryList user={user} darkMode={darkMode} />;
+      case 'add-product': return isAdmin ? <AddProduct user={user} darkMode={darkMode} /> : <Dashboard user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
+      case 'stock-update': return isAdmin ? <StockUpdate user={user} isAdmin={isAdmin} darkMode={darkMode} /> : <Dashboard user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
+      default: return <Dashboard user={user} darkMode={darkMode} toggleDarkMode={toggleDarkMode} />;
     }
   };
+
+  const activeLinkStyle = darkMode ? styles.darkActiveLink : styles.activeLink;
 
   return (
     <div style={{
@@ -92,28 +94,32 @@ function App() {
         </div>
 
         <nav style={styles.nav}>
-          <button onClick={() => setActivePage('dashboard')} style={activePage === 'dashboard' ? styles.activeLink : (darkMode ? styles.darkLink : styles.link)}>
+          <button onClick={() => setActivePage('dashboard')} style={activePage === 'dashboard' ? activeLinkStyle : (darkMode ? styles.darkLink : styles.link)}>
             <FaChartLine /> Özet Panel
           </button>
-          <button onClick={() => setActivePage('products')} style={activePage === 'products' ? styles.activeLink : (darkMode ? styles.darkLink : styles.link)}>
+          <button onClick={() => setActivePage('products')} style={activePage === 'products' ? activeLinkStyle : (darkMode ? styles.darkLink : styles.link)}>
             <FaBox /> Ürünler
           </button>
-          <button onClick={() => setActivePage('categories')} style={activePage === 'categories' ? styles.activeLink : (darkMode ? styles.darkLink : styles.link)}>
+          <button onClick={() => setActivePage('categories')} style={activePage === 'categories' ? activeLinkStyle : (darkMode ? styles.darkLink : styles.link)}>
             <FaThLarge /> Kategoriler
           </button>
           {isAdmin && (
-            <button onClick={() => setActivePage('add-product')} style={activePage === 'add-product' ? styles.activeLink : (darkMode ? styles.darkLink : styles.link)}>
+            <button onClick={() => setActivePage('add-product')} style={activePage === 'add-product' ? activeLinkStyle : (darkMode ? styles.darkLink : styles.link)}>
               <FaPlusCircle /> Yeni Ürün Ekle
             </button>
           )}
           {isAdmin && (
-            <button onClick={() => setActivePage('stock-update')} style={activePage === 'stock-update' ? styles.activeLink : (darkMode ? styles.darkLink : styles.link)}>
+            <button onClick={() => setActivePage('stock-update')} style={activePage === 'stock-update' ? activeLinkStyle : (darkMode ? styles.darkLink : styles.link)}>
               <FaWarehouse /> Stok Güncelle
             </button>
           )}
         </nav>
 
-        <button onClick={handleLogout} style={styles.logoutBtn}>
+        <button onClick={handleLogout} style={{
+          ...styles.logoutBtn,
+          background: darkMode ? '#3f1d1d' : '#fef2f2',
+          color: darkMode ? '#fda4af' : '#ef4444'
+        }}>
           <FaSignOutAlt /> Çıkış Yap
         </button>
       </aside>
@@ -137,6 +143,7 @@ const styles = {
   link: { color: '#64748b', border: 'none', background: 'transparent', padding: '14px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' },
   darkLink: { color: '#94a3b8', border: 'none', background: 'transparent', padding: '14px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '600', cursor: 'pointer', textAlign: 'left' },
   activeLink: { color: '#6366f1', background: '#eef2ff', border: 'none', padding: '14px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' },
+  darkActiveLink: { color: '#c7d2fe', background: '#312e81', border: 'none', padding: '14px 16px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '12px', fontWeight: '700', cursor: 'pointer', textAlign: 'left' },
   mainContent: { flex: 1, marginLeft: '260px', padding: '0' },
   logoutBtn: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', padding: '14px', background: '#fef2f2', color: '#ef4444', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }
 };

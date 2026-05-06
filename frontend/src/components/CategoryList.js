@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getCategories, createCategory, deleteCategory, updateCategory } from '../services/api';
 import { FaPlus, FaFolderOpen, FaInfoCircle, FaTrash, FaEdit } from 'react-icons/fa';
 
-export default function CategoryList({ user }) {
+export default function CategoryList({ user, darkMode }) {
   const [categories, setCategories] = useState([]);
   const [newCat, setNewCat] = useState({ name: '', description: '' });
   const [editingId, setEditingId] = useState(null);
@@ -54,25 +54,32 @@ export default function CategoryList({ user }) {
     window.scrollTo(0, 0);
   };
 
+  const textColor = darkMode ? '#f4f4f5' : '#1e293b';
+  const subTextColor = darkMode ? '#94a3b8' : '#64748b';
+  const cardBg = darkMode ? '#1e293b' : '#fff';
+  const borderColor = darkMode ? '#334155' : '#f1f5f9';
+  const softBg = darkMode ? '#312e81' : '#eef2ff';
+  const inputBg = darkMode ? '#0f172a' : '#fff';
+
   return (
-    <div style={catStyles.container}>
+    <div style={{ ...catStyles.container, background: darkMode ? '#0f172a' : '#f8fafc', minHeight: '100vh' }}>
       <div style={catStyles.headerSection}>
         <div>
-          <h2 style={catStyles.title}>Kategori Yönetimi</h2>
-          <p style={catStyles.subtitle}>Ürünlerinizi düzenlemek için kategorileri kullanın.</p>
+          <h2 style={{ ...catStyles.title, color: textColor }}>Kategori Yönetimi</h2>
+          <p style={{ ...catStyles.subtitle, color: subTextColor }}>Ürünlerinizi düzenlemek için kategorileri kullanın.</p>
         </div>
         {isAdmin && (
           <form onSubmit={handleSave} style={catStyles.topForm}>
             <div style={catStyles.formGroup}>
               <input 
-                style={catStyles.input} 
+                style={{ ...catStyles.input, background: inputBg, border: `1px solid ${borderColor}`, color: textColor }} 
                 placeholder="Kategori Adı" 
                 value={newCat.name} 
                 onChange={e => setNewCat({...newCat, name: e.target.value})} 
                 required
               />
               <textarea 
-                style={{...catStyles.input, minHeight: '80px', resize: 'none'}} 
+                style={{...catStyles.input, minHeight: '80px', resize: 'none', background: inputBg, border: `1px solid ${borderColor}`, color: textColor}} 
                 placeholder="Açıklama" 
                 value={newCat.description} 
                 onChange={e => setNewCat({...newCat, description: e.target.value})}
@@ -98,9 +105,9 @@ export default function CategoryList({ user }) {
 
       <div style={catStyles.grid}>
         {categories.map(cat => (
-          <div key={cat.id} style={catStyles.card}>
+          <div key={cat.id} style={{ ...catStyles.card, background: cardBg, border: `1px solid ${borderColor}` }}>
             <div style={catStyles.cardTop}>
-              <div style={catStyles.iconBox}><FaFolderOpen color="#6366f1" /></div>
+              <div style={{ ...catStyles.iconBox, background: softBg }}><FaFolderOpen color="#6366f1" /></div>
               <div style={{display: 'flex', gap: '5px'}}>
                 {isAdmin && (
                   <>
@@ -108,13 +115,13 @@ export default function CategoryList({ user }) {
                     <button onClick={() => handleDelete(cat.id)} style={catStyles.actionIconBtn}><FaTrash color="#ef4444" /></button>
                   </>
                 )}
-                <div style={catStyles.badge}>ID: #{cat.id}</div>
+                <div style={{ ...catStyles.badge, background: softBg }}>ID: #{cat.id}</div>
               </div>
             </div>
-            <h4 style={catStyles.catName}>{cat.name}</h4>
+            <h4 style={{ ...catStyles.catName, color: textColor }}>{cat.name}</h4>
             <div style={catStyles.descBox}>
               <FaInfoCircle size={12} color="#94a3b8" />
-              <p style={catStyles.catDesc}>{cat.description || 'Açıklama belirtilmemiş.'}</p>
+              <p style={{ ...catStyles.catDesc, color: subTextColor }}>{cat.description || 'Açıklama belirtilmemiş.'}</p>
             </div>
           </div>
         ))}
