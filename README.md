@@ -130,9 +130,6 @@ StockWise centralizes the inventory workflow in a single web application that:
 ### Authentication Flow
 ![Auth Flow](images/auth_flow.png)
 
-### Role-Based Access Control
-![RBAC](images/rbac.png)
-
 ### UML Class Diagram
 ![Project Diagram](images/project-diagram.drawio.png)
 
